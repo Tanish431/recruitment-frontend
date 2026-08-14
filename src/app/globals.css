@@ -1,0 +1,126 @@
+:root {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+
+  --accent: #ff6b4a;
+  --accent-hover: #ff5733;
+  --accent-soft: #ffe4dc;
+  --accent-contrast: #ffffff;
+}
+
+[data-theme="light"] {
+  --bg: #faf9f7;
+  --bg-elevated: #ffffff;
+  --bg-subtle: #f2f0ed;
+  --border: #e6e3de;
+  --border-strong: #d3cfc8;
+  --text: #201d1a;
+  --text-muted: #6b6660;
+  --text-faint: #a39d94;
+  --success: #2f9e44;
+  --success-soft: #e3f5e6;
+  --warning: #d9822b;
+  --warning-soft: #fbe8d2;
+  --danger: #e0393e;
+  --danger-soft: #fbe0e0;
+}
+
+[data-theme="dark"] {
+  --bg: #171513;
+  --bg-elevated: #211e1b;
+  --bg-subtle: #2a2622;
+  --border: #3a352f;
+  --border-strong: #4a443c;
+  --text: #f2ede6;
+  --text-muted: #a8a199;
+  --text-faint: #726b62;
+  --success: #4cc264;
+  --success-soft: #1c3324;
+  --warning: #eba14b;
+  --warning-soft: #3d2c17;
+  --danger: #ef5b5f;
+  --danger-soft: #3a1f20;
+  --accent-soft: #4a2c22;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+a {
+  color: inherit;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+}
+
+input,
+select,
+textarea {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
