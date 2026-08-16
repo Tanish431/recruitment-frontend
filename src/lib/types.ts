@@ -3,11 +3,14 @@ export type Role = "candidate" | "judge" | "admin";
 export interface User {
   id: number;
   campus_email: string;
+  name: string;
   phone: string;
   whatsapp: string;
   role: Role;
   round1_result?: "advanced" | "eliminated" | null;
   round2_result?: "advanced" | "eliminated" | null;
+  round1_result_seen: boolean;
+  round2_result_seen: boolean;
   created_at: string;
 }
 
@@ -85,6 +88,7 @@ export interface ImportResult {
 export interface QueueItem {
   evaluation_id: number;
   candidate_id: number;
+  candidate_name: string;
   candidate_email: string;
   slot_id: number;
   slot_start: string;
@@ -201,3 +205,10 @@ export interface MyClaimedSlot {
   filled_count: number;
   capacity: number;
 }
+
+export interface ScoringProperty {
+  id: number;
+  name: string;
+  position: number;
+}
+export type PropertyRating = "bad" | "meh" | "good";

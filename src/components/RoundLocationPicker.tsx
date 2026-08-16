@@ -18,7 +18,7 @@ export function useLocations(roundId: number | null) {
       setLocations([]);
       return;
     }
-    api.admin.listLocations(roundId).then(setLocations).catch(() => {});
+    api.locations.list(roundId).then(setLocations).catch(() => {});
   }, [roundId]);
   return locations;
 }

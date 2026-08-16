@@ -5,6 +5,34 @@ import { RoundPicker, useLocations } from "@/components/RoundLocationPicker";
 import { PageHeader, Card, Button, Input, Select, Table, Thead, Th, Td, EmptyState } from "@/components/ui";
 import type { GenerateScheduleResult, Location, SlotView } from "@/lib/types";
 
+function LocationCell({ slot, locations, onUpdated }: { slot: SlotView; locations: { id: number; name: string }[]; onUpdated: () => void }) {
+  const [editing, setEditing] = useState(false);
+
+  if (!editing) {
+    return (
+      <span onClick={() => setEditing(true)} style={{ cursor: "pointer" }} title="Click to change">
+        {slot.location_name} <span style={{ opacity: 0.5 }}>✎</span>
+      </span>
+    );
+  }
+
+  return (
+    <select
+      autoFocus
+      defaultValue={slot.location_id}
+      onBlur={() => setEditing(false)}
+      onChange={async (e) => {
+        await api.admin.updateSlotLocation(slot.id, Number(e.target.value));
+        setEditing(false);
+        onUpdated();
+      }}
+      style={{ padding: 4, borderRadius: 4, border: "1px solid var(--border)" }}
+    >
+      {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+    </select>
+  );
+}
+
 export default function SlotsPage() {
   const [roundId, setRoundId] = useState<number | null>(null);
   const [roundNumber, setRoundNumber] = useState<number | null>(null);
@@ -12,10 +40,7 @@ export default function SlotsPage() {
   const [locationsOverride, setLocationsOverride] = useState<Location[] | null>(null);
   const locations = useLocations(roundId);
   const effectiveLocations = locationsOverride ?? locations;
-
   const [newLocationName, setNewLocationName] = useState("");
-  const [round, setRound] = useState<{ id: number; slot_creation_open: boolean } | null>(null);
-
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [weekdayStart, setWeekdayStart] = useState("18:00");
@@ -37,13 +62,7 @@ export default function SlotsPage() {
     if (!roundId || !newLocationName) return;
     await api.admin.createLocation(roundId, newLocationName);
     setNewLocationName("");
-    setLocationsOverride(await api.admin.listLocations(roundId));
-  }
-
-  async function toggleSlotCreation(open: boolean) {
-    if (!roundId) return;
-    await api.admin.toggleSlotCreation(roundId, open);
-    setRound((r) => (r ? { ...r, slot_creation_open: open } : r));
+    setLocationsOverride(await api.locations.list(roundId));
   }
 
   async function generate() {
@@ -85,14 +104,6 @@ export default function SlotsPage() {
           <Button size="sm" variant="secondary" onClick={addLocation} disabled={!roundId || !newLocationName}>Add location</Button>
         </div>
 
-        {round && roundNumber === 2 && (
-          <div style={{ marginTop: 12, padding: 10, background: "var(--accent-soft)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 13 }}>Judge slot claiming is <strong>{round.slot_creation_open ? "OPEN" : "CLOSED"}</strong></span>
-            <Button size="sm" variant="secondary" onClick={() => toggleSlotCreation(!round.slot_creation_open)}>
-              {round.slot_creation_open ? "Close it" : "Open it"}
-            </Button>
-          </div>
-        )}
       </Card>
 
       {roundNumber === 1 || roundNumber === 3 ? (
@@ -166,7 +177,7 @@ export default function SlotsPage() {
             {slots.map((s) => (
               <tr key={s.id}>
                 <Td muted>{s.id}</Td>
-                <Td>{s.location_name}</Td>
+                <Td><LocationCell slot={s} locations={effectiveLocations} onUpdated={refreshSlots} /></Td>
                 <Td>{new Date(s.start_time).toLocaleString()}</Td>
                 <Td>{s.duration_min}m</Td>
                 <Td><CapacityCell slot={s} onUpdated={refreshSlots} /></Td>

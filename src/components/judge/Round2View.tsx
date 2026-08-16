@@ -1,11 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
+import { ArrowLeft, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { useActiveRound, useLocations } from "@/components/RoundLocationPicker";
+import { PropertyScoring } from "@/components/judge/PropertyScoring";
+import { PageHeader, Card, Button, Select, Badge, EmptyState, PageLoading } from "@/components/ui";
 import type { MyClaimedSlot, ParticipantView } from "@/lib/types";
 
 export function Round2View() {
-  const { round } = useActiveRound();
+  const { round, loading: roundLoading } = useActiveRound();
   const roundId = round?.id ?? null;
   const locations = useLocations(roundId);
 
@@ -39,7 +42,7 @@ export function Round2View() {
       await refreshClaims();
       openSlot(id);
     } catch (e: any) {
-      setClaimError(e.message?.includes("already claimed") ? "That location + time is already taken - pick another." : "Failed to claim slot.");
+      setClaimError(e.message?.includes("already claimed") ? "That location + time is already taken — pick another." : e.message);
     } finally {
       setBusy(false);
     }
@@ -59,77 +62,134 @@ export function Round2View() {
     if (claimedSlotId) openSlot(claimedSlotId);
   }
 
-  if (!round) return <p>No round active.</p>;
+
+  if (roundLoading) return <PageLoading />;
+  if (!round) return <EmptyState title="No round active" />;
 
   if (claimedSlotId) {
     return (
       <div>
-        <button onClick={() => setClaimedSlotId(null)}>← Back</button>
-        <h3 style={{ marginTop: 12 }}>Debate roster</h3>
-        {participants.map((p) => (
-          <ParticipantRow key={p.id} p={p} onAttendance={setAttendance} onScore={setScore} />
-        ))}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-5)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button
+              onClick={() => setClaimedSlotId(null)}
+              style={{
+                width: 32, height: 32, borderRadius: "50%", border: "1px solid var(--border)",
+                background: "var(--bg-elevated)", color: "var(--text-muted)",
+                display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+              }}
+              title="Back to your slots"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Debate roster</h2>
+          </div>
+          <Button
+            variant="danger"
+            onClick={async () => {
+              await api.judge.closeSlot(claimedSlotId!);
+              setClaimedSlotId(null);
+              refreshClaims();
+            }}
+          >
+            <X size={14} /> Close this debate
+          </Button>
+        </div>
+
+        {participants.length === 0 ? (
+          <EmptyState title="Slot isn't filled" subtitle="No candidates have been assigned to this debate yet." />
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {participants.map((p) => (
+              <ParticipantRow key={p.id} p={p} roundId={round.id} onAttendance={setAttendance} onScore={setScore} />
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   return (
     <div>
-      <h1>Judge Tools - Round 2 (Debates)</h1>
+      <PageHeader title="Round 2 — Debates" subtitle="Claim a location and time for your debate. First judge to claim it gets it." />
 
-      <h3>Claim a new slot</h3>
-      <p style={{ fontSize: 13, color: "#666" }}>
-        Pick a location, date, and time for your debate. First judge to claim a given location+time gets it.
-      </p>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
-        <select value={locationId ?? ""} onChange={(e) => setLocationId(Number(e.target.value))}>
-          <option value="">Location…</option>
-          {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-        </select>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-        <button onClick={claimSlot} disabled={!locationId || !date || !time || busy}>
-          {busy ? "Claiming…" : "Claim this slot"}
-        </button>
-      </div>
-      {claimError && <p style={{ color: "crimson" }}>{claimError}</p>}
-
-      <h3 style={{ marginTop: 24 }}>Your claimed slots</h3>
-      {myClaims.map((s) => (
-        <div key={s.id} onClick={() => openSlot(s.id)} style={{ padding: 8, borderBottom: "1px solid #eee", cursor: "pointer" }}>
-          {s.location_name} · {new Date(s.start_time).toLocaleString()} · {s.filled_count}/{s.capacity} filled
+      <Card style={{ marginBottom: "var(--space-5)" }}>
+        <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700 }}>Claim a new slot</h3>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <Select value={locationId ?? ""} onChange={(e) => setLocationId(Number(e.target.value))}>
+            <option value="">Location…</option>
+            {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+          </Select>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ padding: "9px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", background: "var(--bg-elevated)" }} />
+          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ padding: "9px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", background: "var(--bg-elevated)" }} />
+          <Button variant="primary" onClick={claimSlot} disabled={!locationId || !date || !time || busy}>
+            {busy ? "Claiming…" : "Claim this slot"}
+          </Button>
         </div>
-      ))}
-      {myClaims.length === 0 && <p style={{ color: "#888" }}>You havent claimed any slots yet.</p>}
+        {locations.length === 0 && (
+          <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>
+            No locations exist for this round yet — ask an admin to add one from the Slots page.
+          </p>
+        )}
+        {claimError && <p style={{ color: "var(--danger)", fontSize: 13, marginTop: 8 }}>{claimError}</p>}
+      </Card>
+
+      <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Your claimed slots</h3>
+      {myClaims.length === 0 ? (
+        <EmptyState title="No slots claimed yet" subtitle="Claim one above to start scoring a debate." />
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {myClaims.map((s) => (
+            <Card key={s.id} style={{ cursor: "pointer" }}>
+              <div onClick={() => openSlot(s.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontWeight: 600 }}>{s.location_name}</div>
+                  <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{new Date(s.start_time).toLocaleString()}</div>
+                </div>
+                <Badge tone="accent">{s.filled_count}/{s.capacity} filled</Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function ParticipantRow({
-  p, onAttendance, onScore,
+  p, roundId, onAttendance, onScore,
 }: {
   p: ParticipantView;
+  roundId: number;
   onAttendance: (id: number, a: "present" | "no_show") => void;
   onScore: (id: number, score: number, comments: string) => void;
 }) {
-  const [score, setLocalScore] = useState(p.score ?? 0);
+  const [score, setLocalScore] = useState(p.score && p.score > 0 ? p.score : 3);
   const [comments, setLocalComments] = useState(p.comments ?? "");
 
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: 6, padding: 10, marginTop: 8 }}>
-      <div style={{ fontWeight: 600 }}>{p.candidate_name || p.candidate_email} - Team {p.team}</div>
-      <div style={{ marginTop: 6 }}>
-        <button onClick={() => onAttendance(p.id, "present")} disabled={p.attendance === "present"}>Present</button>
-        <button onClick={() => onAttendance(p.id, "no_show")} disabled={p.attendance === "no_show"} style={{ marginLeft: 6 }}>No-show</button>
-        <span style={{ marginLeft: 8, color: "#666" }}>({p.attendance})</span>
+    <Card>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontWeight: 600 }}>{p.candidate_name || p.candidate_email}</div>
+        <Badge tone="neutral">Team {p.team}</Badge>
+      </div>
+      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+        <Button size="sm" variant={p.attendance === "present" ? "primary" : "secondary"} onClick={() => onAttendance(p.id, "present")}>Present</Button>
+        <Button size="sm" variant={p.attendance === "no_show" ? "danger" : "secondary"} onClick={() => onAttendance(p.id, "no_show")}>No-show</Button>
       </div>
       {p.attendance === "present" && (
-        <div style={{ marginTop: 8 }}>
-          <input type="number" value={score} onChange={(e) => setLocalScore(Number(e.target.value))} style={{ width: 80 }} />
-          <input placeholder="comments" value={comments} onChange={(e) => setLocalComments(e.target.value)} style={{ marginLeft: 8, width: 300 }} />
-          <button onClick={() => onScore(p.id, score, comments)} style={{ marginLeft: 8 }}>Save</button>
+        <div style={{ marginTop: 14 }}>
+          <PropertyScoring roundId={roundId} kind="participant" targetId={p.id} overall={score} onOverallChange={setLocalScore} />
+          <textarea
+            value={comments}
+            onChange={(e) => setLocalComments(e.target.value)}
+            placeholder="Comments"
+            rows={2}
+            style={{ width: "100%", marginTop: 10, padding: 9, borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", background: "var(--bg-elevated)" }}
+          />
+          <Button size="sm" variant="primary" onClick={() => onScore(p.id, score, comments)} style={{ marginTop: 8 }}>Save</Button>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

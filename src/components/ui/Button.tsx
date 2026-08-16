@@ -11,7 +11,6 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 const base: React.CSSProperties = {
   fontWeight: 600,
   borderRadius: "var(--radius-md)",
-  border: "1px solid transparent",
   cursor: "pointer",
   display: "inline-flex",
   alignItems: "center",
@@ -26,9 +25,16 @@ const sizes = {
   md: { padding: "9px 16px", fontSize: 14 },
 };
 
+const borders: Record<Variant, string> = {
+  primary: "1px solid transparent",
+  secondary: "1px solid var(--border)",
+  ghost: "1px solid transparent",
+  danger: "1px solid transparent",
+};
+
 const variants: Record<Variant, React.CSSProperties> = {
   primary: { background: "var(--accent)", color: "var(--accent-contrast)" },
-  secondary: { background: "var(--bg-elevated)", color: "var(--text)", borderColor: "var(--border)" },
+  secondary: { background: "var(--bg-elevated)", color: "var(--text)" },
   ghost: { background: "transparent", color: "var(--text-muted)" },
   danger: { background: "var(--danger-soft)", color: "var(--danger)" },
 };
@@ -42,6 +48,7 @@ export const Button = forwardRef<HTMLButtonElement, Props>(
         ...base,
         ...sizes[size],
         ...variants[variant],
+        border: borders[variant],
         opacity: disabled ? 0.5 : 1,
         cursor: disabled ? "not-allowed" : "pointer",
         ...style,

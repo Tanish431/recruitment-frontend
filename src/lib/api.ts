@@ -22,6 +22,8 @@ import type {
   OpenSlotOption,
   OtherAssignmentOption,
   MyClaimedSlot,
+  ScoringProperty,
+  PropertyRating,
 } from "./types";
 
 class ApiError extends Error {
@@ -106,6 +108,10 @@ function normalizeGenerateScheduleResult(
 }
 
 export const api = {
+  properties: {
+    list: (roundId: number) =>
+      get<ScoringProperty[]>(`/rounds/${roundId}/properties`),
+  },
   // ---------- Auth ----------
   auth: {
     loginUrl: () => `${API_URL}/auth/login`,
@@ -127,6 +133,10 @@ export const api = {
     },
   },
 
+  locations: {
+    list: (roundId: number) =>
+      get<Location[]>(`/locations?round_id=${roundId}`),
+  },
   // ---------- Candidate ----------
   candidate: {
     myAssignments: () => get<AssignmentView[]>("/me/assignment"),
@@ -147,6 +157,8 @@ export const api = {
       }),
     myUnavailability: () => get<UnavailabilityEntry[]>("/me/unavailability"),
     cancelQuery: (queryId: number) => del<void>(`/me/queries/${queryId}`),
+    acknowledgeResult: (round: 1 | 2) =>
+      post<void>("/me/acknowledge-result", { round }),
   },
 
   // ---------- Admin ----------
@@ -203,7 +215,10 @@ export const api = {
       ),
     listJudgeStations: (roundId: number) =>
       get<JudgeStationView[]>(`/admin/judge-stations?round_id=${roundId}`),
-
+    createProperty: (roundId: number, name: string) =>
+      post<{ id: number }>(`/admin/rounds/${roundId}/properties`, { name }),
+    deleteProperty: (propertyId: number) =>
+      del<void>(`/admin/properties/${propertyId}`),
     runAssignment: (roundId: number, groupSize: number) =>
       post<{
         pool_size: number;
@@ -238,10 +253,6 @@ export const api = {
 
     listUnavailability: (roundId: number) =>
       get<AdminUnavailabilityView[]>(`/admin/rounds/${roundId}/unavailability`),
-    toggleSlotCreation: (roundId: number, open: boolean) =>
-      post<void>(`/admin/rounds/${roundId}/toggle-slot-creation`, { open }),
-    listLocations: (roundId: number) =>
-      get<Location[]>(`/admin/locations?round_id=${roundId}`),
     createLocation: (roundId: number, name: string) =>
       post<{ id: number }>("/admin/locations", { round_id: roundId, name }),
     listCandidates: (page: number, round?: "1" | "2" | "3") =>
@@ -269,6 +280,10 @@ export const api = {
       get<UnassignedCandidate[]>(
         `/admin/rounds/${roundId}/unassigned-candidates`,
       ),
+    updateSlotLocation: (slotId: number, locationId: number) =>
+      patch<void>(`/admin/slots/${slotId}/location`, {
+        location_id: locationId,
+      }),
     cancelQuery: (queryId: number) => del<void>(`/admin/queries/${queryId}`),
     updateSlotCapacity: (slotId: number, capacity: number) =>
       patch<void>(`/admin/slots/${slotId}/capacity`, { capacity }),
@@ -328,7 +343,7 @@ export const api = {
         score,
         comments,
       }),
-
+    closeSlot: (slotId: number) => post<void>(`/judge/slots/${slotId}/close`),
     lookupByEmail: (roundId: number, email: string) =>
       get<CheckInLookupResult>(
         `/judge/lookup?round_id=${roundId}&email=${encodeURIComponent(email)}`,
@@ -348,7 +363,32 @@ export const api = {
       post<void>(`/judge/participants/${participantId}/attendance`, {
         attendance,
       }),
-
+    rateEvaluationProperty: (
+      evaluationId: number,
+      propertyId: number,
+      rating: PropertyRating,
+    ) =>
+      post<void>(
+        `/judge/evaluations/${evaluationId}/properties/${propertyId}/rating`,
+        { rating },
+      ),
+    evaluationRatings: (evaluationId: number) =>
+      get<Record<number, PropertyRating>>(
+        `/judge/evaluations/${evaluationId}/property-ratings`,
+      ),
+    rateParticipantProperty: (
+      participantId: number,
+      propertyId: number,
+      rating: PropertyRating,
+    ) =>
+      post<void>(
+        `/judge/participants/${participantId}/properties/${propertyId}/rating`,
+        { rating },
+      ),
+    participantRatings: (participantId: number) =>
+      get<Record<number, PropertyRating>>(
+        `/judge/participants/${participantId}/property-ratings`,
+      ),
     setScore: (participantId: number, score: number, comments: string) =>
       post<void>(`/judge/participants/${participantId}/score`, {
         score,

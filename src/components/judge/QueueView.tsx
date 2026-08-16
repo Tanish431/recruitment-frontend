@@ -2,21 +2,22 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useActiveRound } from "@/components/RoundLocationPicker";
+import { PropertyScoring } from "@/components/judge/PropertyScoring";
+import { PageHeader, Card, Button, Badge, EmptyState, PageLoading } from "@/components/ui";
 import type { QueueItem } from "@/lib/types";
 
 export function QueueView() {
-  const { round } = useActiveRound();
+  const { round, loading: roundLoading } = useActiveRound();
   const roundId = round?.id ?? null;
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [active, setActive] = useState<QueueItem | null>(null);
-  const [score, setScore] = useState(0);
+  const [score, setScore] = useState(3);
   const [comments, setComments] = useState("");
 
   async function refresh() {
     if (roundId) setQueue(await api.judge.queue(roundId));
   }
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
     const t = setInterval(refresh, 5000);
     return () => clearInterval(t);
@@ -25,18 +26,16 @@ export function QueueView() {
   async function claim(item: QueueItem) {
     await api.judge.claim(item.evaluation_id);
     setActive(item);
-    setScore(0);
+    setScore(3);
     setComments("");
     refresh();
   }
-
   async function submit() {
     if (!active) return;
     await api.judge.submit(active.evaluation_id, score, comments);
     setActive(null);
     refresh();
   }
-
   async function skip() {
     if (!active) return;
     await api.judge.skip(active.evaluation_id);
@@ -44,37 +43,58 @@ export function QueueView() {
     refresh();
   }
 
+  if (roundLoading) return <PageLoading />;
+  if (!round) return <EmptyState title="No round active" />;
+
+  const waiting = queue.filter((q) => q.status === "checked_in");
+
   return (
     <div>
-      <h1>Judge Queue - Round 1 / 3</h1>
-      <div style={{ margin: "16px 0" }}>
-        {round && <p style={{ color: "#666", fontSize: 13 }}>Active round: {round.name}</p>}
-      </div>
+      <PageHeader title={`Round ${round.number} Queue`} subtitle="Claim a checked-in candidate to begin scoring." />
 
       {active && (
-        <div style={{ border: "2px solid #333", borderRadius: 8, padding: 16, marginBottom: 20 }}>
-          <h3>Interviewing: {active.candidate_email}</h3>
-          <label>Score</label>
-          <input type="number" value={score} onChange={(e) => setScore(Number(e.target.value))} style={{ display: "block", marginBottom: 8 }} />
-          <label>Comments</label>
-          <textarea value={comments} onChange={(e) => setComments(e.target.value)} rows={3} style={{ display: "block", width: "100%", marginBottom: 8 }} />
-          <button onClick={submit}>Submit</button>
-          <button onClick={skip} style={{ marginLeft: 8 }}>Skip</button>
-        </div>
+        <Card style={{ marginBottom: "var(--space-5)", borderColor: "var(--accent)" }}>
+          <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700 }}>
+            Interviewing: {active.candidate_name || active.candidate_email}
+          </h3>
+          <PropertyScoring roundId={round.id} kind="evaluation" targetId={active.evaluation_id} overall={score} onOverallChange={setScore} />
+          <textarea
+            value={comments}
+            onChange={(e) => setComments(e.target.value)}
+            placeholder="Comments"
+            rows={3}
+            style={{ width: "100%", marginTop: 14, padding: 9, borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", background: "var(--bg-elevated)" }}
+          />
+          <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+            <Button variant="primary" onClick={submit}>Submit</Button>
+            <Button variant="ghost" onClick={skip}>Skip</Button>
+          </div>
+        </Card>
       )}
 
-      <h3>Queue</h3>
-      {queue.filter((q) => q.status === "checked_in").map((q) => (
-        <div key={q.evaluation_id} style={{ display: "flex", justifyContent: "space-between", padding: 8, borderBottom: "1px solid #eee" }}>
-          <span>{q.candidate_email} · {new Date(q.slot_start).toLocaleTimeString()} {q.skip_count > 0 && `(skipped ${q.skip_count}x)`}</span>
-          <div>
-            <button onClick={() => claim(q)}>Claim</button>
-            <button onClick={() => api.judge.noShow(q.evaluation_id).then(refresh)} style={{ marginLeft: 6 }}>No-show</button>
-          </div>
+      <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Waiting ({waiting.length})</h3>
+      {waiting.length === 0 ? (
+        <EmptyState title="No one waiting" subtitle="Check candidates in from the Check-in page." />
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {waiting.map((q) => (
+            <Card key={q.evaluation_id}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontWeight: 600 }}>{q.candidate_name || q.candidate_email}</div>
+                  <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                    {new Date(q.slot_start).toLocaleTimeString()}
+                    {q.skip_count > 0 && <Badge tone="warning">skipped {q.skip_count}x</Badge>}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Button size="sm" variant="primary" onClick={() => claim(q)}>Claim</Button>
+                  <Button size="sm" variant="danger" onClick={() => api.judge.noShow(q.evaluation_id).then(refresh)}>No-show</Button>
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
-      ))}
-      {queue.filter((q) => q.status === "checked_in").length === 0 && (
-        <p style={{ color: "#888" }}>No one currently checked in and waiting.</p>
       )}
     </div>
   );

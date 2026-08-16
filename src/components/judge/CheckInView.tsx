@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { useActiveRound } from "@/components/RoundLocationPicker";
+import { PageHeader, Card, Button, Input, Badge, EmptyState, PageLoading } from "@/components/ui";
 import type { CheckInLookupResult } from "@/lib/types";
 
 export function CheckInView() {
-  const { round } = useActiveRound();
+  const { round, loading: roundLoading } = useActiveRound();
   const [search, setSearch] = useState("");
   const [candidates, setCandidates] = useState<{ id: number; name: string; email: string }[]>([]);
   const [result, setResult] = useState<CheckInLookupResult | null>(null);
@@ -45,36 +46,46 @@ export function CheckInView() {
     }
   }
 
+  if (roundLoading) return <PageLoading />;
+  if (!round) return <EmptyState title="No round active" />;
+
   return (
     <div>
-      <h1>Front Desk - Check-in</h1>
-      {round && <p style={{ color: "#666", fontSize: 13 }}>Active round: {round.name}</p>}
+      <PageHeader title={`Round ${round.number} Check-in`} subtitle="Search a candidate and mark them arrived." />
 
-      <input
-        placeholder="search candidate by name or email…"
-        value={search}
-        onChange={(e) => { setSearch(e.target.value); setResult(null); }}
-        style={{ width: 300, marginTop: 12 }}
-      />
-      {candidates.map((c) => (
-        <div key={c.id} onClick={() => lookup(c.email)} style={{ padding: 6, cursor: "pointer", borderBottom: "1px solid #eee" }}>
-          {c.name || "(no name)"} - <span style={{ color: "#888" }}>{c.email}</span>
-        </div>
-      ))}
+      <Card>
+        <Input
+          placeholder="search candidate by name or email…"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setResult(null); }}
+        />
+        {candidates.map((c) => (
+          <div
+            key={c.id}
+            onClick={() => lookup(c.email)}
+            style={{ padding: "8px 4px", cursor: "pointer", borderTop: "1px solid var(--border)", fontSize: 14 }}
+          >
+            {c.name || "(no name)"} — <span style={{ color: "var(--text-muted)" }}>{c.email}</span>
+          </div>
+        ))}
+      </Card>
 
-      {error && <p style={{ color: "crimson", marginTop: 12 }}>{error}</p>}
+      {error && <p style={{ color: "var(--danger)", fontSize: 13, marginTop: 12 }}>{error}</p>}
 
       {result && (
-        <div style={{ border: "1px solid #ddd", borderRadius: 6, padding: 16, marginTop: 16, maxWidth: 400 }}>
-          <p><strong>Status:</strong> {result.status}</p>
-          <p><strong>Location:</strong> {result.location_name}</p>
-          <p><strong>Slot:</strong> {new Date(result.slot_start).toLocaleString()}</p>
+        <Card style={{ marginTop: "var(--space-4)", maxWidth: 400 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontWeight: 600 }}>Status</span>
+            <Badge tone={result.status === "checked_in" ? "success" : "neutral"}>{result.status}</Badge>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "4px 0" }}>{result.location_name}</p>
+          <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "4px 0 14px" }}>{new Date(result.slot_start).toLocaleString()}</p>
           {result.status === "not_arrived" ? (
-            <button onClick={checkIn} disabled={busy}>Mark checked in</button>
+            <Button variant="primary" onClick={checkIn} disabled={busy}>Mark checked in</Button>
           ) : (
-            <p style={{ color: "#666" }}>Already {result.status}.</p>
+            <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0 }}>Already {result.status}.</p>
           )}
-        </div>
+        </Card>
       )}
     </div>
   );

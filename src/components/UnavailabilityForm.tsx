@@ -48,7 +48,7 @@ export function UnavailabilityForm({
   return (
     <div>
       <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 14 }}>
-        Tap any dates you won't be able to attend for <strong>{round.name}</strong>.
+        Tap any dates you wont be able to attend for <strong>{round.name}</strong>.
       </p>
 
       <div style={{ display: "flex", gap: "var(--space-5)", flexWrap: "wrap" }}>

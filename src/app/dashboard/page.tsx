@@ -7,6 +7,7 @@ import { Card, Badge, Button, PageHeader } from "@/components/ui";
 import { UserMenu } from "@/components/UserMenu";
 import { UnavailabilityForm } from "@/components/UnavailabilityForm";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ResultToast } from "@/components/ResultToast";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -92,6 +93,7 @@ export default function DashboardPage() {
           </div>
         </section>
       )}
+      {user && <ResultToast user={user} />}
     </main>
   );
 }
