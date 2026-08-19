@@ -1,20 +1,8 @@
-export function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  const { border, borderColor, ...rest } = style ?? {};
-  const resolvedBorder = borderColor
-    ? `1px solid ${borderColor}`
-    : border ?? "1px solid var(--border)";
-
+export function Card({ children, style, borderColor }: { children: React.ReactNode; style?: React.CSSProperties; borderColor?: string }) {
+  const { border, ...rest } = style ?? {};
+  const resolvedBorder = borderColor ? `1px solid ${borderColor}` : border ?? "1px solid var(--border)";
   return (
-    <div
-      style={{
-        background: "var(--bg-elevated)",
-        borderRadius: "var(--radius-lg)",
-        padding: "var(--space-4)",
-        boxShadow: "var(--shadow-sm)",
-        ...rest,
-        border: resolvedBorder,
-      }}
-    >
+    <div style={{ background: "color-mix(in srgb, var(--bg-elevated) 94%, transparent)", borderRadius: "var(--radius-lg)", padding: "var(--space-5)", boxShadow: "var(--shadow-sm)", ...rest, border: resolvedBorder }}>
       {children}
     </div>
   );

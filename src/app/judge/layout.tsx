@@ -16,12 +16,24 @@ export default function JudgeLayout({ children }: { children: React.ReactNode })
   if (!user) return null;
 
   const nav: SidebarNavItem[] = [];
-  if (round && (round.number === 1 || round.number === 3)) {
-    nav.push({ href: "/judge/queue", label: `Round ${round.number} Queue`, icon: "◐" });
-    nav.push({ href: "/judge/checkin", label: `Round ${round.number} Check-in`, icon: "✓" });
+  if (round && round.number === 1) {
+    nav.push({ href: "/judge/queue", label: "Round 1 Queue", icon: "◐" });
+    nav.push({ href: "/judge/checkin", label: "Round 1 Check-in", icon: "✓" });
   }
   if (round && round.number === 2) {
     nav.push({ href: "/judge/round2", label: "Round 2 Scoring", icon: "◑" });
+  }
+  if (round && round.number === 3) {
+    if (user.role === "admin") {
+      nav.push({ href: "/judge/queue", label: "Round 3 Queue", icon: "◐" });
+      nav.push({ href: "/judge/checkin", label: "Round 3 Check-in", icon: "✓" });
+    }
+    if (round && round.number === 3 && user.role === "admin") {
+      nav.push({ href: "/judge/round3/manage", label: "Create R3 Slots", icon: "➕" });
+    }
+    if (round && round.number === 3) {
+      nav.push({ href: "/judge/round3", label: user.role === "admin" ? "Round 3 Slots" : "Round 3 — Join Panel", icon: "◒" });
+    }
   }
 
   return (

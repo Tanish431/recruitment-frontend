@@ -5,7 +5,7 @@ import { RoundPicker } from "@/components/RoundLocationPicker";
 import { useCachedResource } from "@/lib/useCachedResource";
 import { parseLocalDate } from "@/lib/dates";
 import { PageHeader, Card, Button, Badge, Input, EmptyState, PageLoading } from "@/components/ui";
-import type { AssignmentBoardView, SlotView, UnassignedCandidate } from "@/lib/types";
+import type { AssignmentBoardView, SlotView, UnassignedCandidate, SlotJudgesResponse } from "@/lib/types";
 
 const DAYS_PER_PAGE = 6;
 
@@ -109,6 +109,7 @@ export default function AssignmentsPage() {
         <DayModal
           dayGroup={selectedDayGroup}
           roundId={roundId}
+          roundNumber={roundNumber}
           onClose={() => setSelectedDate(null)}
           onChanged={refreshAll}
         />
@@ -224,10 +225,11 @@ function DayGrid({
 }
 
 function DayModal({
-  dayGroup, roundId, onClose, onChanged,
+  dayGroup, roundId, roundNumber, onClose, onChanged,
 }: {
   dayGroup: ReturnType<typeof groupByDate>[number];
   roundId: number;
+  roundNumber: number | null;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -237,6 +239,7 @@ function DayModal({
   const [search, setSearch] = useState("");
   const [warning, setWarning] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -263,7 +266,7 @@ function DayModal({
     return () => {
       cancelled = true;
     };
-  }, [roundId, dayGroup]);
+  }, [roundId, dayGroup, reloadToken]);
 
   async function remove(assignmentId: number) {
     await api.admin.unassignCandidate(assignmentId);
@@ -292,6 +295,73 @@ function DayModal({
       const message = e instanceof Error ? e.message : "Failed to add candidate.";
       setWarning(message.toLowerCase().includes("full") ? "Slot is full." : message);
     }
+  }
+
+  function JudgeReassignControl({ slotId, currentJudgeId, currentLabel, onReassigned }: { slotId: number; currentJudgeId: number; currentLabel: string; onReassigned: () => void }) {
+    const [editing, setEditing] = useState(false);
+    const [search, setSearch] = useState("");
+    const [results, setResults] = useState<{ id: number; name: string; email: string }[]>([]);
+
+    useEffect(() => {
+      if (search.length < 2) { setResults([]); return; }
+      const t = setTimeout(() => api.admin.searchUsers(search, "judge").then(setResults), 300);
+      return () => clearTimeout(t);
+    }, [search]);
+
+    if (!editing) {
+      return (
+        <span onClick={() => setEditing(true)} style={{ cursor: "pointer", fontSize: 12, color: "var(--text-muted)" }}>
+          {currentLabel} <span style={{ opacity: 0.5 }}>✎</span>
+        </span>
+      );
+    }
+
+    return (
+      <div style={{ marginTop: 4 }}>
+        <input
+          placeholder="search replacement judge…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ fontSize: 12, padding: "4px 8px", borderRadius: 4, border: "1px solid var(--border)", width: 200 }}
+        />
+        {results.map((r) => (
+          <div
+            key={r.id}
+            onClick={async () => {
+              await api.admin.reassignSlotJudge(slotId, currentJudgeId, r.id);
+              setEditing(false);
+              onReassigned();
+            }}
+            style={{ fontSize: 12, padding: "4px 6px", cursor: "pointer" }}
+          >
+            {r.name || r.email}
+          </div>
+        ))}
+        <button onClick={() => setEditing(false)} style={{ fontSize: 11, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer" }}>Cancel</button>
+      </div>
+    );
+  }
+
+  function SlotJudgesPanel({ slotId }: { slotId: number }) {
+    const [data, setData] = useState<SlotJudgesResponse | null>(null);
+
+    async function load() {
+      setData(await api.admin.slotJudges(slotId));
+    }
+    useState(() => { load(); });
+
+    if (!data) return null;
+
+    return (
+      <div style={{ marginTop: 8, fontSize: 12 }}>
+        <JudgeReassignControl slotId={slotId} currentJudgeId={data.host.id} currentLabel={`host: ${data.host.name}`} onReassigned={load} />
+        {data.co_judges.map((j) => (
+          <div key={j.id} style={{ marginTop: 4 }}>
+            <JudgeReassignControl slotId={slotId} currentJudgeId={j.id} currentLabel={`co-judge: ${j.name}`} onReassigned={load} />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   const filtered = unassigned.filter(
@@ -328,9 +398,21 @@ function DayModal({
                     <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
                       <strong style={{ color: "var(--text)" }}>{new Date(slot.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong>
                       {" · "}{slot.location_name}
+
                     </div>
                     <Badge tone={full ? "neutral" : "accent"}>{occupants.length}/{slot.capacity}</Badge>
                   </div>
+                  {slot.hosted_by_name && slot.hosted_by_id && (
+                    <JudgeReassignControl
+                      slotId={slot.id}
+                      currentJudgeId={slot.hosted_by_id}
+                      currentLabel={`hosted by ${slot.hosted_by_name}`}
+                      onReassigned={() => setReloadToken((t) => t + 1)}
+                    />
+                  )}
+                  {(dayGroup.slots[0] && (roundNumber === 2 || roundNumber === 3)) && (
+                    <SlotJudgesPanel slotId={slot.id} />
+                  )}
 
                   <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
                     {occupants.map((o) => (

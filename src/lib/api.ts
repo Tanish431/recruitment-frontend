@@ -24,6 +24,9 @@ import type {
   MyClaimedSlot,
   ScoringProperty,
   PropertyRating,
+  OpenSlotToJoin,
+  CoJudgeStatus,
+  SlotJudgesResponse,
 } from "./types";
 
 class ApiError extends Error {
@@ -148,11 +151,13 @@ export const api = {
     submitUnavailability: (
       roundId: number,
       unavailableDates: string[],
+      reason: string,
       note?: string,
     ) =>
       post<void>("/me/unavailability", {
         round_id: roundId,
         unavailable_dates: unavailableDates,
+        reason,
         note,
       }),
     myUnavailability: () => get<UnavailabilityEntry[]>("/me/unavailability"),
@@ -276,6 +281,19 @@ export const api = {
       get<OtherAssignmentOption[]>(
         `/admin/queries/other-assignments?round_id=${roundId}&exclude_assignment_id=${excludeAssignmentId}`,
       ),
+    reassignSlotJudge: (
+      slotId: number,
+      oldJudgeId: number,
+      newJudgeId: number,
+    ) =>
+      post<void>(`/admin/slots/${slotId}/reassign-judge`, {
+        old_judge_id: oldJudgeId,
+        new_judge_id: newJudgeId,
+      }),
+    slotJudges: (slotId: number) =>
+      get<SlotJudgesResponse>(`/admin/slots/${slotId}/judges`),
+    markR3JudgePresent: (slotId: number, judgeId: number) =>
+      post<void>(`/admin/slots/${slotId}/judges/${judgeId}/mark-present`),
     listUnassignedCandidates: (roundId: number) =>
       get<UnassignedCandidate[]>(
         `/admin/rounds/${roundId}/unassigned-candidates`,
@@ -335,13 +353,31 @@ export const api = {
     checkIn: (evaluationId: number) =>
       post<void>(`/judge/evaluations/${evaluationId}/checkin`),
 
+    searchUsersForJudge: (q: string) =>
+      get<
+        {
+          id: number;
+          name: string;
+          email: string;
+          role: string;
+          round1_result: string;
+          round2_result: string;
+        }[]
+      >(`/judge/users/search?q=${encodeURIComponent(q)}&role=candidate`),
+
     claim: (evaluationId: number) =>
       post<void>(`/judge/evaluations/${evaluationId}/claim`),
 
-    submit: (evaluationId: number, score: number, comments: string) =>
+    submit: (
+      evaluationId: number,
+      score: number,
+      comments: string,
+      motion: string,
+    ) =>
       post<void>(`/judge/evaluations/${evaluationId}/submit`, {
         score,
         comments,
+        motion,
       }),
     closeSlot: (slotId: number) => post<void>(`/judge/slots/${slotId}/close`),
     lookupByEmail: (roundId: number, email: string) =>
@@ -352,13 +388,28 @@ export const api = {
       get<MyClaimedSlot[]>(`/judge/slots/my-claimed?round_id=${roundId}`),
     skip: (evaluationId: number) =>
       post<void>(`/judge/evaluations/${evaluationId}/skip`),
-
+    searchUsers: (q: string, role?: string) =>
+      get<
+        {
+          id: number;
+          name: string;
+          email: string;
+          role: string;
+          round1_result: string;
+          round2_result: string;
+        }[]
+      >(
+        `/judge/users/search?q=${encodeURIComponent(q)}${role ? `&role=${role}` : ""}`,
+      ),
     noShow: (evaluationId: number) =>
       post<void>(`/judge/evaluations/${evaluationId}/noshow`),
 
     participants: (slotId: number) =>
       get<ParticipantView[]>(`/judge/slots/${slotId}/participants`),
-
+    setScorer: (slotId: number, judgeId: number) =>
+      post<void>(`/judge/slots/${slotId}/set-scorer`, { judge_id: judgeId }),
+    setMotion: (slotId: number, motion: string) =>
+      post<void>(`/judge/slots/${slotId}/motion`, { motion }),
     setAttendance: (participantId: number, attendance: "present" | "no_show") =>
       post<void>(`/judge/participants/${participantId}/attendance`, {
         attendance,
@@ -394,6 +445,18 @@ export const api = {
         score,
         comments,
       }),
+
+    openSlotsToJoin: (roundId: number) =>
+      get<OpenSlotToJoin[]>(`/judge/slots/open-to-join?round_id=${roundId}`),
+    joinSlot: (slotId: number) => post<void>(`/judge/slots/${slotId}/join`),
+    coJudgeStatus: (slotId: number) =>
+      get<CoJudgeStatus>(`/judge/slots/${slotId}/co-judge-status`),
+    markCoJudgePresent: (slotId: number) =>
+      post<void>(`/judge/slots/${slotId}/mark-co-judge-present`),
+    markHostPresent: (slotId: number) =>
+      post<void>(`/judge/slots/${slotId}/mark-host-present`),
+    setTeamPrep: (slotId: number, team: "A" | "B", text: string) =>
+      post<void>(`/judge/slots/${slotId}/prep`, { team, text }),
   },
 };
 

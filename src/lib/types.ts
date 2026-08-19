@@ -31,6 +31,7 @@ export interface UnavailabilityEntry {
   unavailable_dates: string[];
   note: string;
   submitted_at: string;
+  reason: string;
 }
 
 export interface SlotView {
@@ -41,6 +42,8 @@ export interface SlotView {
   duration_min: number;
   capacity: number;
   filled_count: number;
+  hosted_by_name?: string;
+  hosted_by_id?: number;
 }
 
 export interface AssignmentBoardView {
@@ -122,6 +125,7 @@ export interface AdminUnavailabilityView {
   unavailable_dates: string[];
   note: string;
   submitted_at: string;
+  reason: string;
 }
 
 export interface Round {
@@ -211,4 +215,36 @@ export interface ScoringProperty {
   name: string;
   position: number;
 }
-export type PropertyRating = "bad" | "meh" | "good";
+export type PropertyRating = "poor" | "meh" | "good";
+
+export interface OpenSlotToJoin {
+  id: number;
+  location_name: string;
+  start_time: string;
+  host_name: string;
+  judges_joined: number;
+  judges_needed: number;
+}
+
+export interface CoJudgeStatus {
+  slot_id: number;
+  host_id: number;
+  host_name: string;
+  co_judge_id?: number;
+  co_judge_name?: string;
+  host_marked_co_judge_present: boolean;
+  co_judge_marked_host_present: boolean;
+  you_are_host: boolean;
+  you_are_co_judge: boolean;
+  scoring_unlocked: boolean;
+  scorer_judge_id: number;
+  scorer_name: string;
+  scorer_chosen: boolean;
+  you_are_scorer: boolean;
+  team_a_prep: string;
+  team_b_prep: string;
+  motion: string;
+}
+
+export interface SlotJudgeInfo { id: number; name: string; }
+export interface SlotJudgesResponse { host: SlotJudgeInfo; co_judges: SlotJudgeInfo[]; }

@@ -4,19 +4,47 @@ import { api, ApiError } from "@/lib/api";
 import { useActiveRound } from "@/components/RoundLocationPicker";
 import { PageHeader, Card, Button, Input, Badge, EmptyState, PageLoading } from "@/components/ui";
 import type { CheckInLookupResult } from "@/lib/types";
+import { useIsMobile } from "@/lib/useIsMobile";
+
+interface CandidateSearchResult {
+  id: number;
+  name: string;
+  email: string;
+}
 
 export function CheckInView() {
   const { round, loading: roundLoading } = useActiveRound();
   const [search, setSearch] = useState("");
-  const [candidates, setCandidates] = useState<{ id: number; name: string; email: string }[]>([]);
+  const [candidates, setCandidates] = useState<CandidateSearchResult[]>([]);
   const [result, setResult] = useState<CheckInLookupResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    if (search.length < 2) { setCandidates([]); return; }
-    const t = setTimeout(() => api.admin.searchUsers(search, "candidate").then(setCandidates), 300);
-    return () => clearTimeout(t);
+    let cancelled = false;
+
+    async function runSearch() {
+      if (search.length < 2) {
+        setCandidates([]);
+        return;
+      }
+
+      try {
+        const results = await api.judge.searchUsersForJudge(search);
+        if (!cancelled) {
+          setCandidates(results.map((r) => ({ id: r.id, name: r.name, email: r.email })));
+        }
+      } catch {
+        if (!cancelled) setCandidates([]);
+      }
+    }
+
+    const t = setTimeout(() => void runSearch(), 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
   }, [search]);
 
   async function lookup(email: string) {
@@ -51,42 +79,121 @@ export function CheckInView() {
 
   return (
     <div>
-      <PageHeader title={`Round ${round.number} Check-in`} subtitle="Search a candidate and mark them arrived." />
+      <PageHeader
+        title={`Round ${round.number} Check-in`}
+        subtitle="Search by name or email, then mark the candidate arrived."
+      />
 
-      <Card>
-        <Input
-          placeholder="search candidate by name or email…"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setResult(null); }}
-        />
-        {candidates.map((c) => (
-          <div
-            key={c.id}
-            onClick={() => lookup(c.email)}
-            style={{ padding: "8px 4px", cursor: "pointer", borderTop: "1px solid var(--border)", fontSize: 14 }}
-          >
-            {c.name || "(no name)"} — <span style={{ color: "var(--text-muted)" }}>{c.email}</span>
+      <Card style={{ marginBottom: "var(--space-5)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 4 }}>Active round</div>
+            <div style={{ fontSize: 16, fontWeight: 700 }}>{round.name}</div>
           </div>
-        ))}
+          <Badge tone="accent">Live check-in</Badge>
+        </div>
       </Card>
 
-      {error && <p style={{ color: "var(--danger)", fontSize: 13, marginTop: 12 }}>{error}</p>}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "minmax(320px, 1fr) minmax(320px, 420px)",
+        gap: 16,
+        alignItems: "start",
+      }}>
+        <Card>
+          <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700 }}>Find a candidate</h3>
+          <Input
+            placeholder="search by name or email…"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setResult(null);
+              setError(null);
+            }}
+          />
 
-      {result && (
-        <Card style={{ marginTop: "var(--space-4)", maxWidth: 400 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <span style={{ fontWeight: 600 }}>Status</span>
-            <Badge tone={result.status === "checked_in" ? "success" : "neutral"}>{result.status}</Badge>
+          <div style={{ marginTop: 12 }}>
+            {search.length < 2 ? (
+              <EmptyState title="Start typing" subtitle="Enter at least 2 characters to search the roster." />
+            ) : candidates.length === 0 ? (
+              <EmptyState title="No matches" subtitle="Try a different name or email." />
+            ) : (
+              <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
+                {candidates.map((c) => (
+                  <div
+                    key={c.id}
+                    onClick={() => void lookup(c.email)}
+                    style={{
+                      padding: "10px 12px",
+                      cursor: busy ? "default" : "pointer",
+                      borderTop: "1px solid var(--border)",
+                      background: "var(--bg-elevated)",
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name || "(no name)"}</div>
+                    <div style={{ color: "var(--text-muted)", fontSize: 13 }}>{c.email}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "4px 0" }}>{result.location_name}</p>
-          <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "4px 0 14px" }}>{new Date(result.slot_start).toLocaleString()}</p>
-          {result.status === "not_arrived" ? (
-            <Button variant="primary" onClick={checkIn} disabled={busy}>Mark checked in</Button>
+        </Card>
+
+        <Card>
+          <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700 }}>Check-in record</h3>
+
+          {error && (
+            <div
+              style={{
+                marginBottom: 12,
+                padding: "10px 12px",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--danger-soft)",
+                color: "var(--danger)",
+                fontSize: 13,
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {!result ? (
+            <EmptyState title="No candidate selected" subtitle="Pick a search result to open the check-in record." />
           ) : (
-            <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0 }}>Already {result.status}.</p>
+            <>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 700 }}>
+                    {result.status === "checked_in" ? "Checked in" : "Ready to check in"}
+                  </div>
+                  <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Candidate ID #{result.candidate_id}</div>
+                </div>
+                <Badge tone={result.status === "checked_in" ? "success" : "warning"}>{result.status}</Badge>
+              </div>
+
+              <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
+                <div style={{ padding: 12, border: "1px solid var(--border)", borderRadius: "var(--radius-md)", background: "var(--bg-subtle)" }}>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Location</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{result.location_name}</div>
+                </div>
+
+                <div style={{ padding: 12, border: "1px solid var(--border)", borderRadius: "var(--radius-md)", background: "var(--bg-subtle)" }}>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Slot</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{new Date(result.slot_start).toLocaleString()}</div>
+                </div>
+              </div>
+
+              {result.status === "not_arrived" ? (
+                <Button variant="primary" onClick={checkIn} disabled={busy}>
+                  {busy ? "Marking…" : "Mark checked in"}
+                </Button>
+              ) : (
+                <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0 }}>Already {result.status}.</p>
+              )}
+            </>
           )}
         </Card>
-      )}
+      </div>
     </div>
   );
 }

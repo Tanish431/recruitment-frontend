@@ -106,7 +106,7 @@ export default function SlotsPage() {
 
       </Card>
 
-      {roundNumber === 1 || roundNumber === 3 ? (
+      {roundNumber === 1  ? (
         <Card style={{ marginBottom: "var(--space-5)" }}>
           <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700 }}>Generate schedule</h3>
           <div style={{ display: "grid", gridTemplateColumns: "120px 1fr 1fr", gap: 10, alignItems: "center", maxWidth: 560 }}>
@@ -150,13 +150,14 @@ export default function SlotsPage() {
             {busy ? "Generating…" : "Generate"}
           </Button>
         </Card>
-      ) : roundNumber === 2 ? (
+      ) : roundNumber === 2 || roundNumber === 3 ? (
         <Card style={{ marginBottom: "var(--space-5)" }}>
-          <p style={{ color: "var(--text-muted)", fontSize: 14, margin: 0 }}>
-            Round 2 slots are created by judges claiming their own timing. This view is read-only -
-            use the Assignment Board to move, swap, or remove candidates.
-          </p>
-        </Card>
+            <p style={{ color: "var(--text-muted)", fontSize: 14, margin: 0 }}>
+              {roundNumber === 2
+                ? "Slots for this round are created by judges claiming their own timing."
+                : "Slots for this round are created by admin one at a time (see Create R3 Slots), then joined by 2 observing judges."}
+            </p>
+          </Card>
       ) : null}
 
       {result && (
@@ -171,7 +172,7 @@ export default function SlotsPage() {
       ) : (
         <Table>
           <Thead>
-            <Th>ID</Th><Th>Location</Th><Th>Start</Th><Th>Duration</Th><Th>Filled</Th><Th>Actions</Th>
+            <Th>ID</Th><Th>Location</Th><Th>Start</Th><Th>Duration</Th><Th>Filled</Th><Th>Hosted by</Th><Th>Actions</Th>
           </Thead>
           <tbody>
             {slots.map((s) => (
@@ -181,6 +182,7 @@ export default function SlotsPage() {
                 <Td>{new Date(s.start_time).toLocaleString()}</Td>
                 <Td>{s.duration_min}m</Td>
                 <Td><CapacityCell slot={s} onUpdated={refreshSlots} /></Td>
+                <Td muted>{s.hosted_by_name && `Hosted by ${s.hosted_by_name}`}</Td>
                 <Td><Button size="sm" variant="danger" onClick={() => api.admin.deleteSlot(s.id).then(refreshSlots)}>Delete</Button></Td>
               </tr>
             ))}

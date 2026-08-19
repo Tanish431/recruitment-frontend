@@ -9,4 +9,3 @@ export * from "./EmptyState";
 export * from "./Spinner";
 export * from "./Chip";
 export * from "./MultiDateCalendar";
-export * from "./Modal";

@@ -12,6 +12,7 @@ export function UnavailabilityForm({
 }) {
   const { round } = useActiveRound();
   const [dates, setDates] = useState<string[]>([]);
+  const [reason, setReason] = useState("Other Commitments");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,11 +27,12 @@ export function UnavailabilityForm({
     setBusy(true);
     setError(null);
     try {
-      await api.candidate.submitUnavailability(round.id, dates, note);
+      await api.candidate.submitUnavailability(round.id, dates, reason, note);
       setSaved(true);
       onSubmitted({
         round_number: round.number,
         unavailable_dates: dates,
+        reason,
         note,
         submitted_at: new Date().toISOString(),
       });
@@ -70,11 +72,22 @@ export function UnavailabilityForm({
             </div>
           )}
 
-          <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, display: "block", margin: "12px 0 6px" }}>Reason</label>
+          <select
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            style={{ width: "100%", padding: 9, borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}
+          >
+            <option>Other Commitments</option>
+            <option>Tests</option>
+            <option>Other</option>
+          </select>
+
+          <label style={{ fontSize: 13, fontWeight: 600, display: "block", margin: "12px 0 6px" }}>
             Note <span style={{ color: "var(--text-faint)", fontWeight: 400 }}>(optional)</span>
           </label>
           <textarea
-            placeholder="Anything the admin should know…"
+            placeholder="Do mention when you are free…"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}

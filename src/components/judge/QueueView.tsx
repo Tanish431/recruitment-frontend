@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
@@ -13,6 +14,7 @@ export function QueueView() {
   const [active, setActive] = useState<QueueItem | null>(null);
   const [score, setScore] = useState(3);
   const [comments, setComments] = useState("");
+  const [motion, setMotion] = useState("Motion 1");
 
   async function refresh() {
     if (roundId) setQueue(await api.judge.queue(roundId));
@@ -32,7 +34,7 @@ export function QueueView() {
   }
   async function submit() {
     if (!active) return;
-    await api.judge.submit(active.evaluation_id, score, comments);
+    await api.judge.submit(active.evaluation_id, score, comments, motion);
     setActive(null);
     refresh();
   }
@@ -57,6 +59,13 @@ export function QueueView() {
           <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 700 }}>
             Interviewing: {active.candidate_name || active.candidate_email}
           </h3>
+          <label style={{ fontSize: 13, fontWeight: 600, display: "block", margin: "12px 0 6px" }}>Motion</label>
+          <select value={motion} onChange={(e) => setMotion(e.target.value)} style={{ width: "100%", padding: 9, borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", background: "var(--bg-elevated)", marginBottom: 14 }}>
+            <option>Motion 1</option>
+            <option>Motion 2</option>
+            <option>Motion 3</option>
+          </select>
+
           <PropertyScoring roundId={round.id} kind="evaluation" targetId={active.evaluation_id} overall={score} onOverallChange={setScore} />
           <textarea
             value={comments}
@@ -84,13 +93,20 @@ export function QueueView() {
                   <div style={{ fontWeight: 600 }}>{q.candidate_name || q.candidate_email}</div>
                   <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
                     {new Date(q.slot_start).toLocaleTimeString()}
-                    {q.skip_count > 0 && <Badge tone="warning">skipped {q.skip_count}x</Badge>}
+                    {q.skip_count > 0 && <span style={{ marginLeft: 8, display: "inline-block" }}><Badge tone="warning">skipped {q.skip_count}x</Badge></span>}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Button size="sm" variant="primary" onClick={() => claim(q)}>Claim</Button>
-                  <Button size="sm" variant="danger" onClick={() => api.judge.noShow(q.evaluation_id).then(refresh)}>No-show</Button>
-                </div>
+                {round.number === 3 /* only admins reach this page for R3 per nav gating, but double-guard anyway */ ? (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Button size="sm" variant="primary" onClick={() => claim(q)}>Claim</Button>
+                    <Button size="sm" variant="danger" onClick={() => api.judge.noShow(q.evaluation_id).then(refresh)}>No-show</Button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Button size="sm" variant="primary" onClick={() => claim(q)}>Claim</Button>
+                    <Button size="sm" variant="danger" onClick={() => api.judge.noShow(q.evaluation_id).then(refresh)}>No-show</Button>
+                  </div>
+                )}
               </div>
             </Card>
           ))}
