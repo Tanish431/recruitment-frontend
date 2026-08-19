@@ -95,7 +95,7 @@ function QueryRow({ q, onResolved }: { q: PendingQueryView; onResolved: () => vo
             <option value="">Select open slot…</option>
             {slots.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.location_name} - {new Date(s.start_time).toLocaleString()} ({s.free_capacity} free{s.is_buffer ? ", buffer" : ""})
+                {s.location_name} - {new Date(s.start_time).toLocaleString()} ({s.free_capacity} free)
               </option>
             ))}
           </Select>
