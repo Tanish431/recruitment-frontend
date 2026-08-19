@@ -191,7 +191,6 @@ export interface OpenSlotOption {
   location_name: string;
   start_time: string;
   free_capacity: number;
-  is_buffer: boolean;
 }
 
 export interface OtherAssignmentOption {
@@ -215,7 +214,7 @@ export interface ScoringProperty {
   name: string;
   position: number;
 }
-export type PropertyRating = "poor" | "meh" | "good";
+export type PropertyRating = "bad" | "meh" | "good";
 
 export interface OpenSlotToJoin {
   id: number;

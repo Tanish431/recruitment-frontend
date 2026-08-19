@@ -53,7 +53,7 @@ export default function Round3ManagePage() {
       </Card>
 
       <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Slots & judge presence</h3>
-      {slots.filter((s) => !s.is_buffer).map((s) => (
+      {slots.map((s) => (
         <SlotPresenceCard key={s.id} slot={s} />
       ))}
     </div>

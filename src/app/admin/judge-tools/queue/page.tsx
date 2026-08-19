@@ -10,6 +10,7 @@ export default function JudgeQueuePage() {
   const [active, setActive] = useState<QueueItem | null>(null);
   const [score, setScore] = useState(0);
   const [comments, setComments] = useState("");
+  const [motion, setMotion] = useState("Motion 1");
 
   async function refresh() {
     if (roundId) setQueue(await api.judge.queue(roundId));
@@ -30,7 +31,7 @@ export default function JudgeQueuePage() {
 
   async function submit() {
     if (!active) return;
-    await api.judge.submit(active.evaluation_id, score, comments);
+    await api.judge.submit(active.evaluation_id, score, comments, motion);
     setActive(null);
     refresh();
   }
@@ -54,6 +55,12 @@ export default function JudgeQueuePage() {
           <h3>Interviewing: {active.candidate_email}</h3>
           <label>Score</label>
           <input type="number" value={score} onChange={(e) => setScore(Number(e.target.value))} style={{ display: "block", marginBottom: 8 }} />
+          <label>Motion</label>
+          <select value={motion} onChange={(e) => setMotion(e.target.value)} style={{ display: "block", width: "100%", marginBottom: 8 }}>
+            <option>Motion 1</option>
+            <option>Motion 2</option>
+            <option>Motion 3</option>
+          </select>
           <label>Comments</label>
           <textarea value={comments} onChange={(e) => setComments(e.target.value)} rows={3} style={{ display: "block", width: "100%", marginBottom: 8 }} />
           <button onClick={submit}>Submit</button>
