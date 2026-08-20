@@ -61,14 +61,13 @@ export default function OnboardingPage() {
             <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none", fontWeight: 800, fontSize: 14 }}>
               DebSoc Recruitment
             </Link>
-            <div className="eyebrow" style={{ marginTop: 74 }}>Almost there</div>
             <h1 style={{ fontSize: "clamp(34px, 5vw, 52px)", lineHeight: 1, letterSpacing: "-0.07em", margin: "20px 0 18px" }}>Let&apos;s keep<br /><span style={{ color: "var(--accent)" }}>in touch.</span></h1>
             <p style={{ maxWidth: 330, margin: 0, color: "var(--text-muted)", fontSize: 14, lineHeight: 1.7 }}>A few contact details help us reach you about interview slots, round updates, and anything time-sensitive.</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 42 }}>
             {[
               ["01", "Add your phone number", "Required for scheduling updates"],
-              ["02", "Confirm WhatsApp", "We keep this strictly recruitment-only"],
+              ["02", "Confirm WhatsApp", "We keep this for group making"],
               ["03", "See your candidate dashboard", "Track every round from one place"],
             ].map(([num, title, desc], index) => (
               <div key={num} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
