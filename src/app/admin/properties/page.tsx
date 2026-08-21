@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
@@ -39,8 +40,8 @@ export default function PropertiesPage() {
         <EmptyState title="Select a round" />
       ) : (
         <Card>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            <Input placeholder="e.g. Speaking, Ideas, Articulation" value={name} onChange={(e) => setName(e.target.value)} />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+            <Input placeholder="e.g. Speaking, Ideas, Articulation" value={name} onChange={(e) => setName(e.target.value)} style={{ flex: "1 1 240px" }} />
             <Button variant="primary" onClick={add} disabled={!name}>Add property</Button>
           </div>
 
@@ -49,8 +50,8 @@ export default function PropertiesPage() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {properties.map((p) => (
-                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "var(--bg-subtle)", borderRadius: "var(--radius-sm)" }}>
-                  <span style={{ fontSize: 14 }}>{p.name}</span>
+                <div key={p.id} style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8, padding: "8px 10px", background: "var(--bg-subtle)", borderRadius: "var(--radius-sm)" }}>
+                  <span style={{ fontSize: 14, minWidth: 0, overflowWrap: "anywhere" }}>{p.name}</span>
                   <Button size="sm" variant="danger" onClick={() => remove(p.id)}>Remove</Button>
                 </div>
               ))}

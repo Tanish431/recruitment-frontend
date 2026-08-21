@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useIsMobile } from "@/lib/useIsMobile";
 import { api } from "@/lib/api";
 import { RoundPicker, useLocations } from "@/components/RoundLocationPicker";
 import { PageHeader, Card, Button, Input, Select, Table, Thead, Th, Td, EmptyState } from "@/components/ui";
@@ -57,6 +58,7 @@ export default function SlotsPage() {
   const [result, setResult] = useState<GenerateScheduleResult | null>(null);
   const [slots, setSlots] = useState<SlotView[]>([]);
   const [busy, setBusy] = useState(false);
+  const isMobile = useIsMobile();
 
   async function addLocation() {
     if (!roundId || !newLocationName) return;
@@ -99,8 +101,8 @@ export default function SlotsPage() {
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
           <RoundPicker value={roundId} onChange={(id, num) => { setRoundId(id); setRoundNumber(num); setLocationId(null); setLocationsOverride(null); }} />
           <Button size="sm" variant="secondary" onClick={refreshSlots} disabled={!roundId}>Refresh list</Button>
-          <div style={{ flex: 1 }} />
-          <Input placeholder="new location name" value={newLocationName} onChange={(e) => setNewLocationName(e.target.value)} style={{ width: 180 }} />
+          <div style={{ flex: "1 1 0" }} />
+          <Input placeholder="new location name" value={newLocationName} onChange={(e) => setNewLocationName(e.target.value)} style={{ width: isMobile ? "100%" : 180, flex: "1 1 180px" }} />
           <Button size="sm" variant="secondary" onClick={addLocation} disabled={!roundId || !newLocationName}>Add location</Button>
         </div>
 
@@ -109,9 +111,9 @@ export default function SlotsPage() {
       {roundNumber === 1  ? (
         <Card style={{ marginBottom: "var(--space-5)" }}>
           <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700 }}>Generate schedule</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "120px 1fr 1fr", gap: 10, alignItems: "center", maxWidth: 560 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "120px 1fr 1fr", gap: 10, alignItems: "center", maxWidth: 560 }}>
             <label style={{ fontSize: 13, color: "var(--text-muted)" }}>Location</label>
-            <Select value={locationId ?? ""} onChange={(e) => setLocationId(Number(e.target.value))} style={{ gridColumn: "span 2" }}>
+            <Select value={locationId ?? ""} onChange={(e) => setLocationId(Number(e.target.value))} style={{ gridColumn: isMobile ? "auto" : "span 2" }}>
               <option value="">Select location…</option>
               {effectiveLocations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
             </Select>
@@ -146,13 +148,13 @@ export default function SlotsPage() {
 
 
           </div>
-          <Button variant="primary" onClick={generate} disabled={!roundId || !locationId || busy} style={{ marginTop: 16 }}>
+          <Button variant="primary" onClick={generate} disabled={!roundId || !locationId || busy} style={{ marginTop: 16, width: isMobile ? "100%" : "auto" }}>
             {busy ? "Generating…" : "Generate"}
           </Button>
         </Card>
       ) : roundNumber === 2 || roundNumber === 3 ? (
         <Card style={{ marginBottom: "var(--space-5)" }}>
-            <p style={{ color: "var(--text-muted)", fontSize: 14, margin: 0 }}>
+            <p style={{ color: "var(--text-muted)", fontSize: 14, margin: 0, lineHeight: 1.6 }}>
               {roundNumber === 2
                 ? "Slots for this round are created by judges claiming their own timing."
                 : "Slots for this round are created by admin one at a time (see Create R3 Slots), then joined by 2 observing judges."}

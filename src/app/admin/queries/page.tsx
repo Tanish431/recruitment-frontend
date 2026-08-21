@@ -10,7 +10,11 @@ export default function QueriesPage() {
   async function refresh() {
     setQueries(await api.admin.listPendingQueries());
   }
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    void (async () => {
+      setQueries(await api.admin.listPendingQueries());
+    })();
+  }, []);
 
   return (
     <div>
@@ -38,7 +42,7 @@ function QueryRow({ q, onResolved }: { q: PendingQueryView; onResolved: () => vo
   useEffect(() => {
     if (mode === "reassign") api.admin.openSlotsForRound(q.round_id).then(setSlots).catch((e) => setFetchError(String(e.message || e)));
     if (mode === "swap") api.admin.otherAssignmentsForRound(q.round_id, q.assignment_id).then(setOthers).catch((e) => setFetchError(String(e.message || e)));
-  }, [mode]);
+  }, [mode, q.round_id, q.assignment_id]);
 
   async function resolve() {
     if (mode === "swap" && selectedAssignment) {
@@ -51,13 +55,13 @@ function QueryRow({ q, onResolved }: { q: PendingQueryView; onResolved: () => vo
 
   return (
     <Card>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
             <strong>{q.candidate_name || q.candidate_email}</strong>
             <Badge tone="accent">R{q.round_number}</Badge>
           </div>
-          <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
+          <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4, overflowWrap: "anywhere" }}>
             {q.location_name} · {new Date(q.start_time).toLocaleString()}
           </div>
         </div>
@@ -65,7 +69,7 @@ function QueryRow({ q, onResolved }: { q: PendingQueryView; onResolved: () => vo
       <p style={{ margin: "10px 0", fontSize: 14, color: "var(--text)" }}>{q.reason}</p>
 
       {!mode && (
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           <Button size="sm" variant="secondary" onClick={() => setMode("swap")}>Swap with someone</Button>
           <Button size="sm" variant="secondary" onClick={() => setMode("reassign")}>Move to open slot</Button>
           <Button size="sm" variant="danger" onClick={() => api.admin.cancelQuery(q.query_id).then(onResolved)}>Dismiss (no change)</Button>
@@ -75,8 +79,8 @@ function QueryRow({ q, onResolved }: { q: PendingQueryView; onResolved: () => vo
       {fetchError && <p style={{ color: "var(--danger)", fontSize: 13 }}>{fetchError}</p>}
 
       {mode === "swap" && (
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <Select value={selectedAssignment ?? ""} onChange={(e) => setSelectedAssignment(Number(e.target.value))} style={{ flex: 1 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+          <Select value={selectedAssignment ?? ""} onChange={(e) => setSelectedAssignment(Number(e.target.value))} style={{ flex: "1 1 240px", minWidth: 0 }}>
             <option value="">Select candidate to swap with…</option>
             {others.map((o) => (
               <option key={o.assignment_id} value={o.assignment_id}>
@@ -90,8 +94,8 @@ function QueryRow({ q, onResolved }: { q: PendingQueryView; onResolved: () => vo
       )}
 
       {mode === "reassign" && (
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <Select value={selectedSlot ?? ""} onChange={(e) => setSelectedSlot(Number(e.target.value))} style={{ flex: 1 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+          <Select value={selectedSlot ?? ""} onChange={(e) => setSelectedSlot(Number(e.target.value))} style={{ flex: "1 1 240px", minWidth: 0 }}>
             <option value="">Select open slot…</option>
             {slots.map((s) => (
               <option key={s.id} value={s.id}>

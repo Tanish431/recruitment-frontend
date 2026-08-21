@@ -50,13 +50,13 @@ export default function JudgeRound2Page() {
       {!claimedSlotId && (
         <>
           <h3>Claim a slot</h3>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 16 }}>
             <RoundPicker value={roundId} onChange={(id) => setRoundId(id)} />
-            <select value={locationId ?? ""} onChange={(e) => setLocationId(Number(e.target.value))}>
-              <option value="">Location…</option>
-              {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+            <select value={locationId ?? ""} onChange={(e) => setLocationId(Number(e.target.value))} style={{ flex: "1 1 180px" }}>
+            <option value="">Location…</option>
+            {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
-            <input type="datetime-local" value={dateTime} onChange={(e) => setDateTime(e.target.value)} />
+            <input type="datetime-local" value={dateTime} onChange={(e) => setDateTime(e.target.value)} style={{ flex: "1 1 220px" }} />
             <button onClick={claimSlot} disabled={!roundId || !locationId || !dateTime}>Claim</button>
           </div>
 
@@ -104,19 +104,19 @@ function ParticipantRow({
 
   return (
     <div style={{ border: "1px solid #ddd", borderRadius: 6, padding: 10, marginTop: 8 }}>
-      <div style={{ fontWeight: 600 }}>{p.candidate_email} - Team {p.team}</div>
+      <div style={{ fontWeight: 600, overflowWrap: "anywhere" }}>{p.candidate_email} - Team {p.team}</div>
 
-      <div style={{ marginTop: 6 }}>
+      <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
         <button onClick={() => onAttendance(p.id, "present")} disabled={p.attendance === "present"}>Present</button>
-        <button onClick={() => onAttendance(p.id, "no_show")} disabled={p.attendance === "no_show"} style={{ marginLeft: 6 }}>No-show</button>
-        <span style={{ marginLeft: 8, color: "#666" }}>({p.attendance})</span>
+        <button onClick={() => onAttendance(p.id, "no_show")} disabled={p.attendance === "no_show"}>No-show</button>
+        <span style={{ color: "#666" }}>({p.attendance})</span>
       </div>
 
       {p.attendance === "present" && (
-        <div style={{ marginTop: 8 }}>
+        <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
           <input type="number" value={score} onChange={(e) => setLocalScore(Number(e.target.value))} style={{ width: 80 }} />
-          <input placeholder="comments" value={comments} onChange={(e) => setLocalComments(e.target.value)} style={{ marginLeft: 8, width: 300 }} />
-          <button onClick={() => onScore(p.id, score, comments)} style={{ marginLeft: 8 }}>Save</button>
+          <input placeholder="comments" value={comments} onChange={(e) => setLocalComments(e.target.value)} style={{ flex: "1 1 220px", minWidth: 0 }} />
+          <button onClick={() => onScore(p.id, score, comments)}>Save</button>
         </div>
       )}
     </div>

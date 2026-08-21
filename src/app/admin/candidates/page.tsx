@@ -4,6 +4,15 @@ import { api } from "@/lib/api";
 import { PageHeader, Card, Button, Badge, Select, Table, Thead, Th, Td, EmptyState, PageLoading } from "@/components/ui";
 import type { ImportResult } from "@/lib/types";
 
+type CandidateRow = {
+  id: number;
+  name: string | null;
+  email: string;
+  phone: string | null;
+  round1_result: string | null;
+  round2_result: string | null;
+};
+
 export default function CandidatesPage() {
   const [result, setResult] = useState<ImportResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -29,7 +38,7 @@ export default function CandidatesPage() {
 
       {result && (
         <Card style={{ marginBottom: "var(--space-5)" }}>
-          <div style={{ display: "flex", gap: 16, fontSize: 14 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 14 }}>
             <span><strong>{result.inserted}</strong> inserted</span>
             <span style={{ color: "var(--text-muted)" }}><strong>{result.skipped}</strong> skipped</span>
           </div>
@@ -58,7 +67,7 @@ function CandidateSearchByRound() {
   const [results, setResults] = useState<{ id: number; name: string; email: string; round1_result: string; round2_result: string }[]>([]);
 
   useEffect(() => {
-    if (search.length < 2) { setResults([]); return; }
+    if (search.length < 2) return;
     const t = setTimeout(() => api.admin.searchUsers(search, "candidate").then(setResults), 300);
     return () => clearTimeout(t);
   }, [search]);
@@ -73,8 +82,8 @@ function CandidateSearchByRound() {
   return (
     <Card style={{ marginBottom: "var(--space-5)" }}>
       <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700 }}>Check candidate status</h3>
-      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-        <Select value={roundFilter} onChange={(e) => setRoundFilter(e.target.value as "1" | "2" | "3")}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+        <Select value={roundFilter} onChange={(e) => setRoundFilter(e.target.value as "1" | "2" | "3")} style={{ flex: "1 1 220px" }}>
           <option value="1">Round 1 candidates</option>
           <option value="2">Round 2 candidates (R1 advanced)</option>
           <option value="3">Round 3 candidates (R1 + R2 advanced)</option>
@@ -84,15 +93,15 @@ function CandidateSearchByRound() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
-            flex: 1, padding: "9px 12px", borderRadius: "var(--radius-sm)",
+            flex: "1 1 240px", width: "100%", padding: "9px 12px", borderRadius: "var(--radius-sm)",
             border: "1px solid var(--border)", background: "var(--bg-elevated)", fontSize: 14,
           }}
         />
       </div>
-      {filtered.map((c) => (
-        <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid var(--border)", fontSize: 13 }}>
-          <span>{c.name || "(no name)"} - {c.email}</span>
-          <span style={{ display: "flex", gap: 6 }}>
+      {(search.length < 2 ? [] : filtered).map((c) => (
+        <div key={c.id} style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 10, padding: "8px 0", borderTop: "1px solid var(--border)", fontSize: 13 }}>
+          <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{c.name || "(no name)"} - {c.email}</span>
+          <span style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             <Badge tone={c.round1_result === "advanced" ? "success" : c.round1_result === "eliminated" ? "danger" : "neutral"}>R1: {c.round1_result || "-"}</Badge>
             <Badge tone={c.round2_result === "advanced" ? "success" : c.round2_result === "eliminated" ? "danger" : "neutral"}>R2: {c.round2_result || "-"}</Badge>
           </span>
@@ -108,9 +117,9 @@ function CandidateSearchByRound() {
 function CandidateTable({ refreshSignal }: { refreshSignal: number }) {
   const [page, setPage] = useState(1);
   const [round, setRound] = useState<"1" | "2" | "3">("1");
-  const [data, setData] = useState<{ candidates: any[]; total: number; page_size: number } | null>(null);
+  const [data, setData] = useState<{ candidates: CandidateRow[]; total: number; page_size: number } | null>(null);
 
-  useEffect(() => { setPage(1); }, [round]);
+
   useEffect(() => {
     api.admin.listCandidates(page, round).then(setData);
   }, [page, round, refreshSignal]);
@@ -120,9 +129,9 @@ function CandidateTable({ refreshSignal }: { refreshSignal: number }) {
 
   return (
     <Card>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>All candidates ({data.total})</h3>
-        <Select value={round} onChange={(e) => setRound(e.target.value as "1" | "2" | "3")}>
+        <Select value={round} onChange={(e) => { setRound(e.target.value as "1" | "2" | "3"); setPage(1); }} style={{ width: "100%", maxWidth: 240 }}>
           <option value="1">Round 1 - all candidates</option>
           <option value="2">Round 2 - R1 advanced</option>
           <option value="3">Round 3 - R1 + R2 advanced</option>
@@ -150,7 +159,7 @@ function CandidateTable({ refreshSignal }: { refreshSignal: number }) {
         </Table>
       )}
 
-      <div style={{ marginTop: 14, display: "flex", gap: 8, alignItems: "center" }}>
+      <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
         <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Prev</Button>
         <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Page {page} of {totalPages}</span>
         <Button size="sm" variant="secondary" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</Button>

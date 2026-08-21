@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
@@ -52,9 +53,9 @@ export default function JudgeQueuePage() {
 
       {active && (
         <div style={{ border: "2px solid #333", borderRadius: 8, padding: 16, marginBottom: 20 }}>
-          <h3>Interviewing: {active.candidate_email}</h3>
+          <h3 style={{ overflowWrap: "anywhere" }}>Interviewing: {active.candidate_email}</h3>
           <label>Score</label>
-          <input type="number" value={score} onChange={(e) => setScore(Number(e.target.value))} style={{ display: "block", marginBottom: 8 }} />
+          <input type="number" value={score} onChange={(e) => setScore(Number(e.target.value))} style={{ display: "block", marginBottom: 8, width: "100%" }} />
           <label>Motion</label>
           <select value={motion} onChange={(e) => setMotion(e.target.value)} style={{ display: "block", width: "100%", marginBottom: 8 }}>
             <option>Motion 1</option>
@@ -70,11 +71,11 @@ export default function JudgeQueuePage() {
 
       <h3>Queue</h3>
       {queue.filter((q) => q.status === "checked_in").map((q) => (
-        <div key={q.evaluation_id} style={{ display: "flex", justifyContent: "space-between", padding: 8, borderBottom: "1px solid #eee" }}>
-          <span>{q.candidate_email} · {new Date(q.slot_start).toLocaleTimeString()} {q.skip_count > 0 && `(skipped ${q.skip_count}x)`}</span>
-          <div>
+        <div key={q.evaluation_id} style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, padding: 8, borderBottom: "1px solid #eee" }}>
+          <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{q.candidate_email} · {new Date(q.slot_start).toLocaleTimeString()} {q.skip_count > 0 && `(skipped ${q.skip_count}x)`}</span>
+          <div style={{ display: "flex", gap: 6 }}>
             <button onClick={() => claim(q)}>Claim</button>
-            <button onClick={() => api.judge.noShow(q.evaluation_id).then(refresh)} style={{ marginLeft: 6 }}>No-show</button>
+            <button onClick={() => api.judge.noShow(q.evaluation_id).then(refresh)}>No-show</button>
           </div>
         </div>
       ))}

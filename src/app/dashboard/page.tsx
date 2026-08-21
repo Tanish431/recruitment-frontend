@@ -108,7 +108,7 @@ export default function DashboardPage() {
         <aside>
           <div style={{ marginBottom: 12 }}><div className="mono-label">Availability</div><h2 style={{ fontSize: 20, letterSpacing: "-0.045em", margin: "7px 0 0" }}>Need a different time?</h2></div>
           <Card style={{ padding: 18 }}>
-            <p style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.55, margin: "0 0 16px" }}>Tell us when you&apos;re unavailable so we can plan around your schedule.</p>
+            <p style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.55, margin: "0 0 16px" }}>Tell us when you&apos;re <b>UNAVAILABLE</b> so we can plan around your schedule.</p>
             <UnavailabilityForm onSubmitted={(entry) => setUnavailability((prev) => [...prev.filter((u) => u.round_number !== entry.round_number), entry])} />
           </Card>
 

@@ -1,7 +1,7 @@
 export function Table({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>{children}</table>
+    <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-md)", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+      <table style={{ width: "100%", minWidth: 640, borderCollapse: "collapse", fontSize: 14 }}>{children}</table>
     </div>
   );
 }

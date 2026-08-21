@@ -6,7 +6,7 @@ const STEPS = [
   {
     num: "01",
     title: "Speech Round",
-    desc: "A short speech on a topic of youur choosing.",
+    desc: "A short speech on a topic of your choosing.",
   },
   {
     num: "02",

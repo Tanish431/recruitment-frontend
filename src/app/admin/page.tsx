@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
@@ -32,13 +33,13 @@ export default function AdminOverview() {
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
         {rounds.map((r) => (
           <Card key={r.id}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, minWidth: 0 }}>
                 <span style={{ fontWeight: 600 }}>{r.name}</span>
                 <Badge tone="neutral">Round {r.number}</Badge>
                 {r.is_active && <Badge tone="success">Active</Badge>}
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {(r.number === 1 || r.number === 2) && (
                   <Button size="sm" variant="ghost" onClick={() => syncResults(r.id)}>
                     Sync results

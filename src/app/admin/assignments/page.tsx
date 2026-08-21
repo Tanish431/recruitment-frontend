@@ -5,6 +5,7 @@ import { RoundPicker } from "@/components/RoundLocationPicker";
 import { useCachedResource } from "@/lib/useCachedResource";
 import { parseLocalDate } from "@/lib/dates";
 import { PageHeader, Card, Button, Badge, Input, EmptyState, PageLoading } from "@/components/ui";
+import { useIsMobile } from "@/lib/useIsMobile";
 import type { AssignmentBoardView, SlotView, UnassignedCandidate, SlotJudgesResponse } from "@/lib/types";
 
 const DAYS_PER_PAGE = 6;
@@ -15,6 +16,7 @@ export default function AssignmentsPage() {
   const [groupSize, setGroupSize] = useState(6);
   const [status, setStatus] = useState<{ text: string; tone: "success" | "warning" } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   const [dayPage, setDayPage] = useState(0);
   const [running, setRunning] = useState(false);
 
@@ -61,7 +63,7 @@ export default function AssignmentsPage() {
         title="Assignment Board"
         subtitle="Click a day to view, add, or remove candidates from its slots."
         action={
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
             <RoundPicker value={roundId} onChange={(id, num) => { setRoundId(id); setRoundNumber(num); }} />
             {roundNumber === 2 && (
               <Input
@@ -371,8 +373,8 @@ function DayModal({
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.45)", zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <Card style={{ width: 620, maxWidth: "100%", maxHeight: "85vh", overflowY: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-4)" }}>
+      <Card style={{ width: "min(620px, 100%)", maxHeight: "85vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: "var(--space-4)" }}>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
             {localDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
           </h2>
@@ -394,8 +396,8 @@ function DayModal({
               const full = slot.filled_count >= slot.capacity;
               return (
                 <Card key={slot.id} style={{ padding: "var(--space-3) var(--space-4)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <div style={{ fontSize: 13, color: "var(--text-muted)", overflowWrap: "anywhere" }}>
                       <strong style={{ color: "var(--text)" }}>{new Date(slot.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong>
                       {" · "}{slot.location_name}
 
@@ -416,8 +418,8 @@ function DayModal({
 
                   <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
                     {occupants.map((o) => (
-                      <div key={o.assignment_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
-                        <span>{o.candidate_name || o.candidate_email}{o.team ? <Badge tone="neutral">{o.team}</Badge> : null}</span>
+                      <div key={o.assignment_id} style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8, fontSize: 14 }}>
+                        <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{o.candidate_name || o.candidate_email}{o.team ? <Badge tone="neutral">{o.team}</Badge> : null}</span>
                         <Button size="sm" variant="danger" onClick={() => remove(o.assignment_id)}>Remove</Button>
                       </div>
                     ))}

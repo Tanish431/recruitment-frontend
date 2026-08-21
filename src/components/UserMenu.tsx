@@ -106,9 +106,26 @@ export function UserMenu({ user, onLogout }: { user: User; onLogout: () => void 
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between" }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "76px minmax(0, 1fr)",
+        gap: 12,
+        alignItems: "start",
+      }}
+    >
       <span style={{ color: "var(--text-muted)" }}>{label}</span>
-      <span style={{ fontWeight: 500 }}>{value}</span>
+      <span
+        style={{
+          fontWeight: 500,
+          minWidth: 0,
+          textAlign: "right",
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
+        }}
+      >
+        {value}
+      </span>
     </div>
   );
 }
