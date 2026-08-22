@@ -14,6 +14,7 @@ const NAV: SidebarNavItem[] = [
   { href: "/admin/queries", label: "Queries", icon: "◎" },
   { href: "/admin/unavailability", label: "Unavailability", icon: "◔" },
   { href: "/admin/properties", label: "Scoring Properties", icon: "◒" },
+  { href: "/admin/results", label: "Results", icon: "◈" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

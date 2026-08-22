@@ -32,7 +32,7 @@ export default function JudgeLayout({ children }: { children: React.ReactNode })
       nav.push({ href: "/judge/round3/manage", label: "Create R3 Slots", icon: "➕" });
     }
     if (round && round.number === 3) {
-      nav.push({ href: "/judge/round3", label: user.role === "admin" ? "Round 3 Slots" : "Round 3 — Join Panel", icon: "◒" });
+      nav.push({ href: "/judge/round3", label: user.role === "admin" ? "Round 3 Slots" : "Round 3 - Join Panel", icon: "◒" });
     }
   }
 

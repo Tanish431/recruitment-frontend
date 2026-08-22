@@ -27,6 +27,8 @@ import type {
   OpenSlotToJoin,
   CoJudgeStatus,
   SlotJudgesResponse,
+  ResultsTableView,
+  CandidateSummaryView,
 } from "./types";
 
 class ApiError extends Error {
@@ -246,6 +248,11 @@ export const api = {
         assignment_a_id: assignmentAId,
         assignment_b_id: assignmentBId,
       }),
+
+    resultsTable: (roundId: number) =>
+      get<ResultsTableView>(`/admin/rounds/${roundId}/results-table`),
+    candidateSummary: (candidateId: number) =>
+      get<CandidateSummaryView>(`/admin/candidates/${candidateId}/summary`),
 
     listPendingQueries: () => get<PendingQueryView[]>("/admin/queries"),
 

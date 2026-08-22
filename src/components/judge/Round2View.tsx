@@ -123,7 +123,7 @@ export function Round2View() {
   return (
     <div>
       <PageHeader
-        title="Round 2 — Debates"
+        title="Round 2 - Debates"
         subtitle="Create a new debate slot, or join an existing one as co-judge."
       />
 

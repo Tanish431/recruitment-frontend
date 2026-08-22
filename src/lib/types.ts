@@ -247,3 +247,32 @@ export interface CoJudgeStatus {
 
 export interface SlotJudgeInfo { id: number; name: string; }
 export interface SlotJudgesResponse { host: SlotJudgeInfo; co_judges: SlotJudgeInfo[]; }
+
+export interface ResultsTableRow {
+  candidate_id: number;
+  name: string;
+  email: string;
+  overall?: number;
+  properties: Record<number, "bad" | "meh" | "good">;
+}
+export interface ResultsTableView {
+  properties: { id: number; name: string; position: number }[];
+  rows: ResultsTableRow[];
+}
+export interface CandidateRoundSummary {
+  round_number: number;
+  status: string;
+  overall?: number;
+  comments: string;
+  motion?: string;
+  team?: string;
+  team_a_prep?: string;
+  team_b_prep?: string;
+  properties: Record<string, "bad" | "meh" | "good">;
+}
+export interface CandidateSummaryView {
+  candidate_id: number;
+  name: string;
+  email: string;
+  rounds: CandidateRoundSummary[];
+}

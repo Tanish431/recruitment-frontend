@@ -143,7 +143,7 @@ export default function Home() {
                   boxShadow: "var(--shadow-md)",
                 }}
               >
-                I&apos;m curious — let&apos;s go{" "}
+                I&apos;m curious - let&apos;s go{" "}
                 <span style={{ fontSize: 17 }}>→</span>
               </a>
               <span style={{ color: "var(--text-faint)", fontSize: 12 }}>

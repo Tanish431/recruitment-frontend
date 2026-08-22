@@ -28,7 +28,7 @@ export default function Round3ManagePage() {
       start_time: new Date(`${date}T${time}`).toISOString(),
       duration_min: duration, capacity: 1,
     });
-    setStatus("Slot created — waiting for 2 judges to join.");
+    setStatus("Slot created - waiting for 2 judges to join.");
     setDate(""); setTime("");
     refresh();
   }
@@ -87,7 +87,7 @@ function SlotPresenceCard({ slot }: { slot: SlotView }) {
 }
 
 function PresenceRow({ slotId, judge, onMarked }: { slotId: number; judge: { id: number; name: string }; onMarked: () => void }) {
-  // presence flag isn't in SlotJudgesResponse yet — using a simple mark button;
+  // presence flag isn't in SlotJudgesResponse yet - using a simple mark button;
   // extend SlotJudges to also return host_marked_present per co-judge if you want a live checkmark here.
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

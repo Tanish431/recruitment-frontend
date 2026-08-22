@@ -58,8 +58,8 @@ export function Round3JoinPanel() {
   return (
     <div>
       <PageHeader
-        title="Round 3 — Bias Check"
-        subtitle="Admins create interview slots. Join as one of two observing judges — only the admin enters scores."
+        title="Round 3 - Bias Check"
+        subtitle="Admins create interview slots. Join as one of two observing judges - only the admin enters scores."
       />
 
       {error && <p style={{ color: "var(--danger)", fontSize: 13, marginBottom: 12 }}>{error}</p>}
