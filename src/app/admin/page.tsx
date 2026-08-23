@@ -26,7 +26,7 @@ export default function AdminOverview() {
   return (
     <div>
       <PageHeader
-        title="Overview"
+        title="Overview & Round Control"
         subtitle={`${queries.length} pending ${queries.length === 1 ? "query" : "queries"} across all rounds`}
       />
 

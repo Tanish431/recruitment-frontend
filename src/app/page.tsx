@@ -54,6 +54,7 @@ export default function Home() {
         </Link>
         <a
           href={loginUrl}
+          className="landing-button landing-button-secondary"
           style={{
             padding: "10px 16px",
             borderRadius: "var(--radius-full)",
@@ -129,6 +130,7 @@ export default function Home() {
             >
               <a
                 href={loginUrl}
+                className="landing-button landing-button-primary"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
