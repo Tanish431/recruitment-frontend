@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
-import { sanitizePhoneInput, isValidPhone } from "@/lib/validation";
+import { sanitizePhoneInput, isValidPhone, isValidBitsId } from "@/lib/validation";
 import { Card, Input, Button } from "@/components/ui";
 
 export default function OnboardingPage() {
@@ -12,6 +12,7 @@ export default function OnboardingPage() {
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [sameAsPhone, setSameAsPhone] = useState(true);
+  const [bitsId, setBitsId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -40,9 +41,13 @@ export default function OnboardingPage() {
       setError("WhatsApp number must be exactly 10 digits.");
       return;
     }
+    if (!isValidBitsId(bitsId)) {
+        setError("Enter a valid BITS ID, e.g. 2026A7PS0072P.");
+        return;
+      }
     setBusy(true);
     try {
-      await api.auth.updateProfile(phone, wa);
+      await api.auth.updateProfile(phone, wa, bitsId.toUpperCase());
       router.replace("/dashboard");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to save profile");
@@ -81,6 +86,14 @@ export default function OnboardingPage() {
 
         <Card style={{ padding: "clamp(24px, 5vw, 42px)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <div className="mono-label">Candidate profile · step 1 of 1</div>
+          <h2 style={{ fontSize: 25, letterSpacing: "-0.055em", margin: "16px 0 8px" }}>Your ID: </h2>
+          <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>BITS ID</label>
+          <Input
+            value={bitsId}
+            onChange={(e) => setBitsId(e.target.value.toUpperCase())}
+            placeholder="e.g. 2026A7PS0072P"
+            style={{ marginBottom: 14 }}
+          />
           <h2 style={{ fontSize: 25, letterSpacing: "-0.055em", margin: "16px 0 8px" }}>Your contact details</h2>
           <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, margin: "0 0 28px" }}>Use a number you&apos;ll have access to throughout the recruitment cycle.</p>
 

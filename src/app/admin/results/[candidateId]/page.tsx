@@ -23,7 +23,7 @@ export default function CandidateSummaryPage() {
   return (
     <div>
       <Button variant="ghost" onClick={() => router.back()} style={{ marginBottom: 12 }}>← Back to results</Button>
-      <PageHeader title={data.name || data.email} subtitle={data.email} />
+      <PageHeader title={data.name || data.bits_id} subtitle={`${data.bits_id} · ${data.phone}`} />
 
       {data.rounds.length === 0 ? (
         <EmptyState title="No round data" subtitle="This candidate hasn't been scored in any round yet." />
@@ -44,6 +44,13 @@ export default function CandidateSummaryPage() {
                 <p style={{ fontSize: 13, marginTop: 10 }}><strong>Motion:</strong> {rs.motion}</p>
               )}
 
+              {(rs.judge_name || rs.co_judge_name) && (
+                <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 6 }}>
+                  {rs.judge_name && <>Judged by <strong>{rs.judge_name}</strong></>}
+                  {rs.co_judge_name && <> · Co-judge: <strong>{rs.co_judge_name}</strong></>}
+                </p>
+              )}
+
               {Object.keys(rs.properties).length > 0 && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
                   {Object.entries(rs.properties).map(([name, rating]) => (
@@ -55,8 +62,18 @@ export default function CandidateSummaryPage() {
                 </div>
               )}
 
-              {rs.comments && (
-                <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 10, lineHeight: 1.5 }}>{rs.comments}</p>
+              {rs.speaker_notes && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)" }}>SPEAKER NOTES</div>
+                  <p style={{ fontSize: 13, margin: "4px 0 0", lineHeight: 1.5 }}>{rs.speaker_notes}</p>
+                </div>
+              )}
+
+              {rs.final_notes && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)" }}>FINAL NOTES</div>
+                  <p style={{ fontSize: 13, margin: "4px 0 0", lineHeight: 1.5 }}>{rs.final_notes}</p>
+                </div>
               )}
 
               {(rs.team_a_prep || rs.team_b_prep) && (

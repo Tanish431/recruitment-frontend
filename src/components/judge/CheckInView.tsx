@@ -8,6 +8,7 @@ import { useIsMobile } from "@/lib/useIsMobile";
 
 interface CandidateSearchResult {
   id: number;
+  bits_id: string;
   name: string;
   email: string;
 }
@@ -33,7 +34,7 @@ export function CheckInView() {
       try {
         const results = await api.judge.searchUsersForJudge(search);
         if (!cancelled) {
-          setCandidates(results.map((r) => ({ id: r.id, name: r.name, email: r.email })));
+          setCandidates(results.map((r) => ({ id: r.id, bits_id: r.bits_id, name: r.name, email: r.email })));
         }
       } catch {
         if (!cancelled) setCandidates([]);
@@ -131,7 +132,7 @@ export function CheckInView() {
                     }}
                   >
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name || "(no name)"}</div>
-                    <div style={{ color: "var(--text-muted)", fontSize: 13 }}>{c.email}</div>
+                    <div style={{ color: "var(--text-muted)", fontSize: 13 }}>{c.bits_id||c.email}</div>
                   </div>
                 ))}
               </div>

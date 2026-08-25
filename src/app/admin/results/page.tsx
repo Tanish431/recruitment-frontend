@@ -11,7 +11,7 @@ const RATING_TONE: Record<string, "danger" | "warning" | "success"> = {
 };
 const RATING_RANK: Record<string, number> = { bad: 0, meh: 1, good: 2 };
 
-type SortKey = "name" | "email" | "overall" | { propertyId: number };
+type SortKey = "name" | "bits_id" | "phone" | "overall" | { propertyId: number };
 type SortDir = "asc" | "desc";
 
 export default function ResultsPage() {
@@ -45,8 +45,9 @@ export default function ResultsPage() {
     const rows = [...data.rows];
 
     function valueFor(row: ResultsTableRow): number | string {
-      if (sortKey === "name") return (row.name || row.email).toLowerCase();
-      if (sortKey === "email") return row.email.toLowerCase();
+      if (sortKey === "name") return (row.name).toLowerCase();
+      if (sortKey === "bits_id") return (row.bits_id).toLowerCase();
+      if (sortKey === "phone") return (row.phone).toLowerCase();
       if (sortKey === "overall") return row.overall ?? -1;
       const rating = row.properties[sortKey.propertyId];
       return rating ? RATING_RANK[rating] : -1;
@@ -93,8 +94,9 @@ export default function ResultsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: "var(--bg-subtle)" }}>
-                <th style={sortableThStyle} onClick={() => toggleSort("name")}>Name{sortIndicator("name")}</th>
-                <th style={sortableThStyle} onClick={() => toggleSort("email")}>Email{sortIndicator("email")}</th>
+                      <th style={sortableThStyle} onClick={() => toggleSort("name")}>Name{sortIndicator("name")}</th>
+                      <th style={sortableThStyle} onClick={() => toggleSort("bits_id")}>BITS ID{sortIndicator("bits_id")}</th>
+                      <th style={thStyle}>Phone</th>
                 {data.properties.map((p) => (
                   <th key={p.id} style={sortableThStyle} onClick={() => toggleSort({ propertyId: p.id })}>
                     {p.name}{sortIndicator({ propertyId: p.id })}
@@ -112,7 +114,8 @@ export default function ResultsPage() {
                   style={{ cursor: "pointer", borderTop: "1px solid var(--border)" }}
                 >
                   <td style={{ ...tdStyle, fontWeight: 600, color: "var(--accent)" }}>{row.name || "-"}</td>
-                  <td style={tdStyle}>{row.email}</td>
+                  <td style={tdStyle}>{row.bits_id || "-"}</td>
+                  <td style={tdStyle}>{row.phone || "-"}</td>
                   {data.properties.map((p) => {
                     const rating = row.properties[p.id];
                     return (

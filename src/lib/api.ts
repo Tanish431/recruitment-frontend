@@ -29,6 +29,7 @@ import type {
   SlotJudgesResponse,
   ResultsTableView,
   CandidateSummaryView,
+  JudgeOption
 } from "./types";
 
 class ApiError extends Error {
@@ -122,8 +123,8 @@ export const api = {
     loginUrl: () => `${API_URL}/auth/login`,
     logout: () => post<void>("/auth/logout"),
     me: () => get<User>("/me"),
-    updateProfile: (phone: string, whatsapp: string) =>
-      patch<void>("/me/profile", { phone, whatsapp }),
+    updateProfile: (phone: string, whatsapp: string, bitsId: string) =>
+      patch<void>("/me/profile", { phone, whatsapp, bits_id: bitsId }),
   },
 
   rounds: {
@@ -213,6 +214,8 @@ export const api = {
           id: number;
           name: string;
           email: string;
+          phone: string | null;
+          bits_id: string | null;
           role: string;
           round1_result: string;
           round2_result: string;
@@ -365,6 +368,7 @@ export const api = {
         {
           id: number;
           name: string;
+          bits_id: string;
           email: string;
           role: string;
           round1_result: string;
@@ -375,15 +379,20 @@ export const api = {
     claim: (evaluationId: number) =>
       post<void>(`/judge/evaluations/${evaluationId}/claim`),
 
+    listJudges: () => get<JudgeOption[]>("/judge/judges/list"),
     submit: (
       evaluationId: number,
       score: number,
-      comments: string,
+      speakerNotes: string,
+      finalNotes: string,
+      coJudgeId: number | null,
       motion: string,
     ) =>
       post<void>(`/judge/evaluations/${evaluationId}/submit`, {
         score,
-        comments,
+        speaker_notes: speakerNotes,
+        final_notes: finalNotes,
+        co_judge_id: coJudgeId,
         motion,
       }),
     closeSlot: (slotId: number) => post<void>(`/judge/slots/${slotId}/close`),
@@ -447,10 +456,16 @@ export const api = {
       get<Record<number, PropertyRating>>(
         `/judge/participants/${participantId}/property-ratings`,
       ),
-    setScore: (participantId: number, score: number, comments: string) =>
+    setScore: (
+      participantId: number,
+      score: number,
+      speakerNotes: string,
+      finalNotes: string,
+    ) =>
       post<void>(`/judge/participants/${participantId}/score`, {
         score,
-        comments,
+        speaker_notes: speakerNotes,
+        final_notes: finalNotes,
       }),
 
     openSlotsToJoin: (roundId: number) =>

@@ -10,22 +10,39 @@ export function PropertyScoring({
   kind,
   targetId,
   overall,
-  onOverallChange,
+  onOverallChangeAction,
+  onCompleteChangeAction,
 }: {
   roundId: number;
   kind: "evaluation" | "participant";
   targetId: number;
   overall: number;
-  onOverallChange: (v: number) => void;
+  onOverallChangeAction: (v: number) => void;
+  onCompleteChangeAction?: (complete: boolean) => void;
 }) {
   const [properties, setProperties] = useState<ScoringProperty[]>([]);
   const [ratings, setRatings] = useState<Record<number, PropertyRating>>({});
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    api.properties.list(roundId).then(setProperties);
-    const fetchRatings = kind === "evaluation" ? api.judge.evaluationRatings(targetId) : api.judge.participantRatings(targetId);
-    fetchRatings.then(setRatings).catch(() => setRatings({}));
-  }, [roundId, targetId]);
+    let cancelled = false;
+
+    async function load() {
+      setLoaded(false);
+      const nextProperties = await api.properties.list(roundId);
+      const fetchRatings = kind === "evaluation" ? api.judge.evaluationRatings(targetId) : api.judge.participantRatings(targetId);
+      const nextRatings = await fetchRatings.catch(() => ({}));
+      if (cancelled) return;
+      setProperties(nextProperties);
+      setRatings(nextRatings);
+      setLoaded(true);
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [roundId, targetId, kind]);
 
   async function rate(propertyId: number, rating: PropertyRating) {
     setRatings((prev) => ({ ...prev, [propertyId]: rating }));
@@ -35,6 +52,14 @@ export function PropertyScoring({
       await api.judge.rateParticipantProperty(targetId, propertyId, rating);
     }
   }
+
+  const overallComplete = overall >= 1 && overall <= 5;
+  const propertiesComplete = properties.length === 0 || properties.every((p) => ratings[p.id]);
+  const complete = loaded && overallComplete && propertiesComplete;
+
+  useEffect(() => {
+    onCompleteChangeAction?.(complete);
+  }, [complete, onCompleteChangeAction]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -47,8 +72,14 @@ export function PropertyScoring({
 
       <div>
         <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Overall</label>
-        <OverallSlider value={overall} onChange={onOverallChange} />
+        <OverallSlider value={overall} onChange={onOverallChangeAction} />
       </div>
+
+      {!complete && loaded && properties.length > 0 && (
+        <p style={{ margin: 0, fontSize: 12, color: "var(--warning)" }}>
+          Rate every property before saving.
+        </p>
+      )}
     </div>
   );
 }

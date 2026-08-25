@@ -7,7 +7,7 @@ import type { ImportResult } from "@/lib/types";
 type CandidateRow = {
   id: number;
   name: string | null;
-  email: string;
+  bits_id: string | null;
   phone: string | null;
   round1_result: string | null;
   round2_result: string | null;
@@ -64,7 +64,7 @@ export default function CandidatesPage() {
 function CandidateSearchByRound() {
   const [search, setSearch] = useState("");
   const [roundFilter, setRoundFilter] = useState<"1" | "2" | "3">("1");
-  const [results, setResults] = useState<{ id: number; name: string; email: string; round1_result: string; round2_result: string }[]>([]);
+  const [results, setResults] = useState<{ id: number; name: string; bits_id: string | null; round1_result: string; round2_result: string }[]>([]);
 
   useEffect(() => {
     if (search.length < 2) return;
@@ -100,7 +100,7 @@ function CandidateSearchByRound() {
       </div>
       {(search.length < 2 ? [] : filtered).map((c) => (
         <div key={c.id} style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 10, padding: "8px 0", borderTop: "1px solid var(--border)", fontSize: 13 }}>
-          <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{c.name || "(no name)"} - {c.email}</span>
+          <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{c.name || "(no name)"} - {c.bits_id || "no ID"}</span>
           <span style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             <Badge tone={c.round1_result === "advanced" ? "success" : c.round1_result === "eliminated" ? "danger" : "neutral"}>R1: {c.round1_result || "-"}</Badge>
             <Badge tone={c.round2_result === "advanced" ? "success" : c.round2_result === "eliminated" ? "danger" : "neutral"}>R2: {c.round2_result || "-"}</Badge>
@@ -143,13 +143,13 @@ function CandidateTable({ refreshSignal }: { refreshSignal: number }) {
       ) : (
         <Table>
           <Thead>
-            <Th>Name</Th><Th>Email</Th><Th>Phone</Th><Th>R1</Th><Th>R2</Th>
+            <Th>Name</Th><Th>BITS ID</Th><Th>Phone</Th><Th>R1</Th><Th>R2</Th>
           </Thead>
           <tbody>
             {data.candidates.map((c) => (
               <tr key={c.id}>
                 <Td>{c.name || "-"}</Td>
-                <Td muted>{c.email}</Td>
+                <Td>{c.bits_id || "-"}</Td>
                 <Td muted>{c.phone}</Td>
                 <Td>{c.round1_result || "-"}</Td>
                 <Td>{c.round2_result || "-"}</Td>

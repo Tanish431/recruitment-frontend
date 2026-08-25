@@ -38,8 +38,8 @@ export default function JudgeRound2Page() {
     if (claimedSlotId) loadParticipants(claimedSlotId);
   }
 
-  async function setScore(id: number, score: number, comments: string) {
-    await api.judge.setScore(id, score, comments);
+  async function setScore(id: number, score: number, speakerNotes: string, finalNotes: string) {
+    await api.judge.setScore(id, score, speakerNotes, finalNotes);
     if (claimedSlotId) loadParticipants(claimedSlotId);
   }
 
@@ -97,10 +97,11 @@ function ParticipantRow({
 }: {
   p: ParticipantView;
   onAttendance: (id: number, a: "present" | "no_show") => void;
-  onScore: (id: number, score: number, comments: string) => void;
+  onScore: (id: number, score: number, speakerNotes: string, finalNotes: string) => void;
 }) {
   const [score, setLocalScore] = useState(p.score ?? 0);
-  const [comments, setLocalComments] = useState(p.comments ?? "");
+  const [speakerNotes, setSpeakerNotes] = useState(p.speaker_notes ?? "");
+  const [finalNotes, setFinalNotes] = useState(p.final_notes ?? "");
 
   return (
     <div style={{ border: "1px solid #ddd", borderRadius: 6, padding: 10, marginTop: 8 }}>
@@ -115,8 +116,9 @@ function ParticipantRow({
       {p.attendance === "present" && (
         <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
           <input type="number" value={score} onChange={(e) => setLocalScore(Number(e.target.value))} style={{ width: 80 }} />
-          <input placeholder="comments" value={comments} onChange={(e) => setLocalComments(e.target.value)} style={{ flex: "1 1 220px", minWidth: 0 }} />
-          <button onClick={() => onScore(p.id, score, comments)}>Save</button>
+          <input placeholder="speaker notes" value={speakerNotes} onChange={(e) => setSpeakerNotes(e.target.value)} style={{ flex: "1 1 220px", minWidth: 0 }} />
+          <input placeholder="final notes" value={finalNotes} onChange={(e) => setFinalNotes(e.target.value)} style={{ flex: "1 1 220px", minWidth: 0 }} />
+          <button onClick={() => onScore(p.id, score, speakerNotes, finalNotes)}>Save</button>
         </div>
       )}
     </div>

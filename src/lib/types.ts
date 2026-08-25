@@ -4,6 +4,7 @@ export interface User {
   id: number;
   campus_email: string;
   name: string;
+  bits_id: string;
   phone: string;
   whatsapp: string;
   role: Role;
@@ -49,6 +50,7 @@ export interface SlotView {
 export interface AssignmentBoardView {
   assignment_id: number;
   candidate_id: number;
+  candidate_bits_id: string;
   candidate_email: string;
   candidate_name: string;
   slot_id: number;
@@ -56,17 +58,6 @@ export interface AssignmentBoardView {
   location_name: string;
   status: string;
   team?: "A" | "B" | null;
-}
-
-export interface PendingQueryView {
-  query_id: number;
-  assignment_id: number;
-  candidate_id: number;
-  candidate_email: string;
-  reason: string;
-  round_number: number;
-  location_name: string;
-  start_time: string;
 }
 
 export interface JudgeStationView {
@@ -91,6 +82,7 @@ export interface ImportResult {
 export interface QueueItem {
   evaluation_id: number;
   candidate_id: number;
+  candidate_bits_id: string;
   candidate_name: string;
   candidate_email: string;
   slot_id: number;
@@ -111,16 +103,19 @@ export interface AvailableSlot {
 export interface ParticipantView {
   id: number;
   candidate_name: string;
+  candidate_bits_id: string;
   candidate_id: number;
   candidate_email: string;
   team: "A" | "B";
   attendance: "pending" | "present" | "no_show";
   score?: number | null;
-  comments?: string | null;
+  speaker_notes?: string | null;
+  final_notes?: string | null;
 }
 
 export interface AdminUnavailabilityView {
   candidate_name: string;
+  candidate_bits_id: string;
   candidate_email: string;
   unavailable_dates: string[];
   note: string;
@@ -143,6 +138,7 @@ export interface Location {
 
 export interface CheckInLookupResult {
   evaluation_id: number;
+  candidate_bits_id: string;
   candidate_id: number;
   status: string;
   location_name: string;
@@ -153,6 +149,7 @@ export interface CandidateListItem {
   id: number;
   name: string;
   email: string;
+  bits_id: string;
   phone: string;
   whatsapp: string;
   round1_result: string;
@@ -178,6 +175,7 @@ export interface PendingQueryView {
   slot_id: number;
   candidate_id: number;
   candidate_name: string;
+  candidate_bits_id: string;
   candidate_email: string;
   reason: string;
   round_id: number;
@@ -196,6 +194,7 @@ export interface OpenSlotOption {
 export interface OtherAssignmentOption {
   assignment_id: number;
   candidate_name: string;
+  candidate_bits_id: string;
   candidate_email: string;
   location_name: string;
   start_time: string;
@@ -251,7 +250,8 @@ export interface SlotJudgesResponse { host: SlotJudgeInfo; co_judges: SlotJudgeI
 export interface ResultsTableRow {
   candidate_id: number;
   name: string;
-  email: string;
+  bits_id: string;
+  phone: string;
   overall?: number;
   properties: Record<number, "bad" | "meh" | "good">;
 }
@@ -263,9 +263,12 @@ export interface CandidateRoundSummary {
   round_number: number;
   status: string;
   overall?: number;
-  comments: string;
+  speaker_notes?: string;
+  final_notes?: string;
   motion?: string;
   team?: string;
+  judge_name?: string;
+  co_judge_name?: string;
   team_a_prep?: string;
   team_b_prep?: string;
   properties: Record<string, "bad" | "meh" | "good">;
@@ -273,6 +276,9 @@ export interface CandidateRoundSummary {
 export interface CandidateSummaryView {
   candidate_id: number;
   name: string;
-  email: string;
+  bits_id: string;
+  phone: string;
   rounds: CandidateRoundSummary[];
 }
+
+export interface JudgeOption { id: number; name: string; }

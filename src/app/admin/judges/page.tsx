@@ -5,8 +5,8 @@ import { PageHeader, Card, Button, Input, EmptyState } from "@/components/ui";
 
 export default function JudgesPage() {
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState<{ id: number; name: string; email: string; role: string }[]>([]);
-  const [judges, setJudges] = useState<{ id: number; name: string; email: string }[]>([]);
+  const [results, setResults] = useState<{ id: number; name: string; email: string; phone: string | null; role: string }[]>([]);
+  const [judges, setJudges] = useState<{ id: number; name: string; email: string; phone: string | null }[]>([]);
 
   async function refreshJudges() {
     setJudges(await api.admin.searchUsers("", "judge"));
@@ -39,7 +39,12 @@ export default function JudgesPage() {
         <Input placeholder="search by name or email…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ maxWidth: 320, width: "100%" }} />
         {results.map((r) => (
           <div key={r.id} style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8, padding: "8px 0", borderTop: "1px solid var(--border)" }}>
-            <span style={{ fontSize: 14, minWidth: 0, overflowWrap: "anywhere" }}>{r.name || "(no name)"} - <span style={{ color: "var(--text-muted)" }}>{r.email}</span></span>
+            <div style={{ minWidth: 0, overflowWrap: "anywhere" }}>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{r.name || "(no name)"}</div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                {r.phone || "no phone"} · {r.email}
+              </div>
+            </div>
             <Button size="sm" variant="primary" onClick={() => promote(r.email)}>Promote</Button>
           </div>
         ))}
@@ -52,7 +57,7 @@ export default function JudgesPage() {
         ) : (
           judges.map((j) => (
             <div key={j.id} style={{ padding: "6px 0", fontSize: 14, borderTop: "1px solid var(--border)", overflowWrap: "anywhere" }}>
-              {j.name || "(no name)"} - <span style={{ color: "var(--text-muted)" }}>{j.email}</span>
+              {j.name || "(no name)"} - <span style={{ color: "var(--text-muted)" }}>{j.phone || "no phone"} · {j.email}</span>
             </div>
           ))
         )}

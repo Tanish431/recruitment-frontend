@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { RoundPicker } from "@/components/RoundLocationPicker";
 import type { QueueItem } from "@/lib/types";
@@ -10,29 +10,41 @@ export default function JudgeQueuePage() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [active, setActive] = useState<QueueItem | null>(null);
   const [score, setScore] = useState(0);
-  const [comments, setComments] = useState("");
+  const [speakerNotes, setSpeakerNotes] = useState("");
+  const [finalNotes, setFinalNotes] = useState("");
+  const [coJudgeName, setCoJudgeName] = useState("");
   const [motion, setMotion] = useState("Motion 1");
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     if (roundId) setQueue(await api.judge.queue(roundId));
-  }
-  useEffect(() => {
-    refresh();
-    const t = setInterval(refresh, 5000); // live-ish polling
-    return () => clearInterval(t);
   }, [roundId]);
+
+  useEffect(() => {
+    void refresh();
+    const t = setInterval(() => { void refresh(); }, 5000); // live-ish polling
+    return () => clearInterval(t);
+  }, [refresh]);
 
   async function claim(item: QueueItem) {
     await api.judge.claim(item.evaluation_id);
     setActive(item);
     setScore(0);
-    setComments("");
+    setSpeakerNotes("");
+    setFinalNotes("");
+    setCoJudgeName("");
     refresh();
   }
 
   async function submit() {
     if (!active) return;
-    await api.judge.submit(active.evaluation_id, score, comments, motion);
+    await api.judge.submit(
+      active.evaluation_id,
+      score,
+      speakerNotes,
+      finalNotes,
+      coJudgeId,
+      motion,
+    );
     setActive(null);
     refresh();
   }
@@ -62,8 +74,12 @@ export default function JudgeQueuePage() {
             <option>Motion 2</option>
             <option>Motion 3</option>
           </select>
-          <label>Comments</label>
-          <textarea value={comments} onChange={(e) => setComments(e.target.value)} rows={3} style={{ display: "block", width: "100%", marginBottom: 8 }} />
+          <label>Speaker Notes</label>
+          <textarea value={speakerNotes} onChange={(e) => setSpeakerNotes(e.target.value)} rows={3} style={{ display: "block", width: "100%", marginBottom: 8 }} />
+          <label>Final Notes</label>
+          <textarea value={finalNotes} onChange={(e) => setFinalNotes(e.target.value)} rows={3} style={{ display: "block", width: "100%", marginBottom: 8 }} />
+          <label>Co-judge (if any)</label>
+          <input value={coJudgeName} onChange={(e) => setCoJudgeName(e.target.value)} placeholder="Name" style={{ display: "block", width: "100%", marginBottom: 8 }} />
           <button onClick={submit}>Submit</button>
           <button onClick={skip} style={{ marginLeft: 8 }}>Skip</button>
         </div>

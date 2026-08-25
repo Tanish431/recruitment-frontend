@@ -393,8 +393,8 @@ function SlotWorkspace({
       ) : (
         <Card>
           <p style={{ margin: 0, color: "var(--text-muted)" }}>
-            {status.scorer_name} is entering the scores. You&apos;re here as a bias
-            check.
+            {status.scorer_name} is entering the scores. You&apos;re here as a
+            bias check.
           </p>
         </Card>
       )}
@@ -606,15 +606,18 @@ function HostScoringPanel({
     if (savedMotionTimerRef.current !== null) {
       window.clearTimeout(savedMotionTimerRef.current);
     }
-    savedMotionTimerRef.current = window.setTimeout(() => setSavedMotion(false), 3000);
+    savedMotionTimerRef.current = window.setTimeout(
+      () => setSavedMotion(false),
+      3000,
+    );
   }
 
   async function setAttendance(id: number, attendance: "present" | "no_show") {
     await api.judge.setAttendance(id, attendance);
     await loadParticipantsNow();
   }
-  async function setScore(id: number, score: number, comments: string) {
-    await api.judge.setScore(id, score, comments);
+  async function setScore(id: number, score: number, speakerNotes: string, finalNotes: string) {
+    await api.judge.setScore(id, score, speakerNotes, finalNotes);
     await loadParticipantsNow();
   }
   async function savePrep() {
@@ -638,16 +641,29 @@ function HostScoringPanel({
           placeholder="e.g. This house believes..."
           style={{ ...textareaStyle, marginTop: 4 }}
         />
-        <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={saveMotion}
-          >
+        <div
+          style={{
+            marginTop: 8,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <Button size="sm" variant="primary" onClick={saveMotion}>
             Save motion
           </Button>
           {savedMotion && (
-            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--success)", background: "var(--success-soft)", borderRadius: "999px", padding: "4px 8px" }}>
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: "var(--success)",
+                background: "var(--success-soft)",
+                borderRadius: "999px",
+                padding: "3px 8px",
+                lineHeight: 1,
+              }}
+            >
               Saved ✓
             </span>
           )}
@@ -746,10 +762,12 @@ function ParticipantRow({
   p: ParticipantView;
   roundId: number;
   onAttendance: (id: number, a: "present" | "no_show") => void;
-  onScore: (id: number, score: number, comments: string) => void;
+  onScore: (id: number, score: number, speakerNotes: string, finalNotes: string) => void;
 }) {
   const [score, setLocalScore] = useState(p.score && p.score > 0 ? p.score : 3);
-  const [comments, setLocalComments] = useState(p.comments ?? "");
+  const [speakerNotes, setSpeakerNotes] = useState(p.speaker_notes ?? "");
+  const [finalNotes, setFinalNotes] = useState(p.final_notes ?? "");
+  const [scoringComplete, setScoringComplete] = useState(false);
   const [saved, setSaved] = useState(false);
   const savedTimerRef = useRef<number | null>(null);
 
@@ -770,7 +788,7 @@ function ParticipantRow({
         }}
       >
         <div style={{ fontWeight: 600 }}>
-          {p.candidate_name || p.candidate_email}
+          {p.candidate_name || p.candidate_bits_id}
         </div>
         <Badge tone="neutral">Team {p.team}</Badge>
       </div>
@@ -797,36 +815,61 @@ function ParticipantRow({
             kind="participant"
             targetId={p.id}
             overall={score}
-            onOverallChange={setLocalScore}
+            onOverallChangeAction={setLocalScore}
+            onCompleteChangeAction={setScoringComplete}
           />
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "var(--text-muted)",
+            }}
+          >
+            Speaker Notes
+          </label>
           <textarea
-            value={comments}
-            onChange={(e) => setLocalComments(e.target.value)}
-            placeholder="Comments"
+            value={speakerNotes}
+            onChange={(e) => setSpeakerNotes(e.target.value)}
+            rows={2}
+            style={textareaStyle}
+          />
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "var(--text-muted)",
+              marginTop: 8,
+            }}
+          >
+            Final Notes
+          </label>
+          <textarea
+            value={finalNotes}
+            onChange={(e) => setFinalNotes(e.target.value)}
             rows={2}
             style={textareaStyle}
           />
           <div
             style={{
-              marginTop: 8,
+              marginTop: 6,
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: 6,
+              flexWrap: "wrap",
             }}
           >
             <Button
               size="sm"
               variant="primary"
               onClick={async () => {
-                await onScore(p.id, score, comments);
+                await onScore(p.id, score, speakerNotes, finalNotes);
                 setSaved(true);
                 if (savedTimerRef.current !== null)
                   window.clearTimeout(savedTimerRef.current);
-                savedTimerRef.current = window.setTimeout(
-                  () => setSaved(false),
-                  3000,
-                );
+                savedTimerRef.current = window.setTimeout(() => setSaved(false), 3000);
               }}
+              disabled={!scoringComplete}
+              title={!scoringComplete ? "Complete all property ratings first" : undefined}
             >
               Save
             </Button>
