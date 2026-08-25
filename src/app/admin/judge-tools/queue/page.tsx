@@ -13,6 +13,7 @@ export default function JudgeQueuePage() {
   const [speakerNotes, setSpeakerNotes] = useState("");
   const [finalNotes, setFinalNotes] = useState("");
   const [coJudgeName, setCoJudgeName] = useState("");
+  const [coJudgeId, setCoJudgeId] = useState<number | null>(null);
   const [motion, setMotion] = useState("Motion 1");
 
   const refresh = useCallback(async () => {
