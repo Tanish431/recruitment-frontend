@@ -128,13 +128,15 @@ function AssignmentCard({ assignment: a }: { assignment: AssignmentView }) {
   // const submitted = queryStatus != null;
 
   async function submitQuery() {
-    if (!reason) return;
+    const trimmedReason = reason.trim();
+    if (!trimmedReason) return;
     setBusy(true);
     setError(null);
     try {
-      await api.candidate.raiseQuery(a.assignment_id, reason);
+      await api.candidate.raiseQuery(a.assignment_id, trimmedReason);
       setQueryStatus("pending");
       setShowQuery(false);
+      setReason("");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to submit");
     } finally {
@@ -160,7 +162,7 @@ function AssignmentCard({ assignment: a }: { assignment: AssignmentView }) {
   const date = new Date(a.start_time);
   const dateLabel = date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   const timeLabel = date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  const [submitted, setSubmitted] = useState(a.query_status === "pending");
+  const [submitted] = useState(a.query_status === "pending");
 
   return (
     <Card style={{ padding: 0, overflow: "hidden" }}>
@@ -185,9 +187,9 @@ function AssignmentCard({ assignment: a }: { assignment: AssignmentView }) {
           <div style={{ marginTop: 14 }}>
             {!showQuery ? <Button size="sm" variant="secondary" onClick={() => setShowQuery(true)}>Can&apos;t make this slot?</Button> : (
               <div>
-                <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Tell us what timing would work better" rows={3} style={{ width: "100%", resize: "vertical", fontSize: 12 }} />
+                <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Tell us what timing would work better" rows={3} required style={{ width: "100%", resize: "vertical", fontSize: 12 }} />
                 {error && <p style={{ color: "var(--danger)", fontSize: 12, margin: "7px 0 0" }}>{error}</p>}
-                <div style={{ marginTop: 8, display: "flex", gap: 8 }}><Button size="sm" variant="primary" onClick={submitQuery} disabled={busy || !reason}>Submit query</Button><Button size="sm" variant="ghost" onClick={() => setShowQuery(false)}>Cancel</Button></div>
+                <div style={{ marginTop: 8, display: "flex", gap: 8 }}><Button size="sm" variant="primary" onClick={submitQuery} disabled={busy || !reason.trim()}>Submit query</Button><Button size="sm" variant="ghost" onClick={() => setShowQuery(false)}>Cancel</Button></div>
               </div>
             )}
           </div>

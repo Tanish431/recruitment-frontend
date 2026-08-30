@@ -20,20 +20,26 @@ export function UnavailabilityForm({
 
   async function submit() {
     if (!round) return;
+    const trimmedNote = note.trim();
     if (dates.length === 0) {
       setError("Select at least one date.");
+      return;
+    }
+    if (!trimmedNote) {
+      setError("Please add a note.");
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      await api.candidate.submitUnavailability(round.id, dates, reason, note);
+      await api.candidate.submitUnavailability(round.id, dates, reason, trimmedNote);
       setSaved(true);
+      setNote("");
       onSubmitted({
         round_number: round.number,
         unavailable_dates: dates,
         reason,
-        note,
+        note: trimmedNote,
         submitted_at: new Date().toISOString(),
       });
     } catch (e) {
@@ -84,13 +90,14 @@ export function UnavailabilityForm({
           </select>
 
           <label style={{ fontSize: 13, fontWeight: 600, display: "block", margin: "12px 0 6px" }}>
-            Note <span style={{ color: "var(--text-faint)", fontWeight: 400 }}>(optional)</span>
+            Note <span style={{ color: "var(--danger)" }}>*</span>
           </label>
           <textarea
             placeholder="Do mention when you are free…"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
+            required
             style={{
               width: "100%",
               padding: 9,
@@ -105,7 +112,7 @@ export function UnavailabilityForm({
           {error && <p style={{ color: "var(--danger)", fontSize: 13, marginTop: 10 }}>{error}</p>}
           {saved && <p style={{ color: "var(--success)", fontSize: 13, marginTop: 10 }}>Saved.</p>}
 
-          <Button variant="primary" onClick={submit} disabled={busy} style={{ marginTop: 14 }}>
+          <Button variant="primary" onClick={submit} disabled={busy || !note.trim()} style={{ marginTop: 14 }}>
             {busy ? "Saving…" : "Submit unavailability"}
           </Button>
         </div>
