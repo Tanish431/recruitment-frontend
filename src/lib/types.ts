@@ -200,14 +200,6 @@ export interface OtherAssignmentOption {
   start_time: string;
 }
 
-export interface MyClaimedSlot {
-  id: number;
-  location_name: string;
-  start_time: string;
-  filled_count: number;
-  capacity: number;
-}
-
 export interface ScoringProperty {
   id: number;
   name: string;
@@ -245,7 +237,21 @@ export interface CoJudgeStatus {
 }
 
 export interface SlotJudgeInfo { id: number; name: string; }
-export interface SlotJudgesResponse { host: SlotJudgeInfo; co_judges: SlotJudgeInfo[]; }
+export interface SlotCoJudgeInfo { id: number; name: string; present: boolean; }
+export interface SlotJudgesResponse {
+  host: SlotJudgeInfo;
+  co_judges: SlotCoJudgeInfo[];
+  judges_needed: number;
+}
+
+export interface MyClaimedSlot {
+  id: number;
+  location_name: string;
+  start_time: string;
+  filled_count: number;
+  capacity: number;
+  presence_confirmed?: boolean;
+}
 
 export interface ResultsTableRow {
   candidate_id: number;
