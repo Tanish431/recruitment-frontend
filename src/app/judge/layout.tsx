@@ -25,14 +25,13 @@ export default function JudgeLayout({ children }: { children: React.ReactNode })
     nav.push({ href: "/judge/round2", label: "Round 2 Scoring", icon: "◑" });
   }
   if (round?.number === 3) {
-      if (isAdmin) {
-        nav.push({ href: "/judge/round3/manage", label: "Round 3 Slots", icon: "◒" });
-        nav.push({ href: "/judge/round3", label: "Round 3 — Observe", icon: "◓" });
-        nav.push({ href: "/judge/checkin", label: "Round 3 Check-in", icon: "✓" });
-        nav.push({ href: "/judge/queue", label: "Round 3 Queue", icon: "◐" });
-      } else {
-        nav.push({ href: "/judge/round3", label: "Round 3 — Join Panel", icon: "◒" });
-      }
+    if (isAdmin) {
+      nav.push({ href: "/judge/round3/manage", label: "Round 3 Slots", icon: "◒" });
+      nav.push({ href: "/judge/round3", label: "Round 3 — Observe", icon: "◓" });
+      nav.push({ href: "/judge/checkin", label: "Round 3 Check-in", icon: "✓" });
+      nav.push({ href: "/judge/queue", label: "Round 3 Queue", icon: "◐" });
+    } else {
+      nav.push({ href: "/judge/round3", label: "Round 3 — Join Panel", icon: "◒" });
     }
   }
 
