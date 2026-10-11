@@ -251,6 +251,7 @@ export interface MyClaimedSlot {
   filled_count: number;
   capacity: number;
   presence_confirmed?: boolean;
+  is_host?: boolean;
 }
 
 export interface ResultsTableRow {

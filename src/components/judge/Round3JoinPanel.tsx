@@ -55,7 +55,7 @@ export function Round3JoinPanel() {
     <div>
       <PageHeader
         title="Round 3 — Bias Check"
-        subtitle="Join an interview slot as one of two observing judges. Only the admin enters scores."
+        subtitle="Join an interview slot as one of two observing judges. Only the slot's host admin enters scores."
       />
 
       {error && (
@@ -76,13 +76,19 @@ export function Round3JoinPanel() {
                   <div style={{ fontWeight: 600 }}>{s.location_name}</div>
                   <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{new Date(s.start_time).toLocaleString()}</div>
                 </div>
-                <Badge tone={s.presence_confirmed ? "success" : "warning"}>
-                  {s.presence_confirmed ? "Admin confirmed you're present" : "Awaiting admin confirmation"}
-                </Badge>
+                {s.is_host ? (
+                  <Badge tone="accent">You host this slot</Badge>
+                ) : (
+                  <Badge tone={s.presence_confirmed ? "success" : "warning"}>
+                    {s.presence_confirmed ? "Host confirmed you're present" : "Awaiting host confirmation"}
+                  </Badge>
+                )}
               </div>
-              <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "8px 0 0" }}>
-                You're here as a bias-check observer — the admin enters the scores.
-              </p>
+              {!s.is_host && (
+                <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "8px 0 0" }}>
+                  You're here as a bias-check observer — the host admin enters the scores.
+                </p>
+              )}
             </Card>
           ))}
         </div>
