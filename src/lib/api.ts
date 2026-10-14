@@ -29,7 +29,7 @@ import type {
   SlotJudgesResponse,
   ResultsTableView,
   CandidateSummaryView,
-  JudgeOption
+  JudgeOption,
 } from "./types";
 
 class ApiError extends Error {
@@ -213,15 +213,14 @@ export const api = {
         {
           id: number;
           name: string;
+          bits_id: string;
           email: string;
-          phone: string | null;
-          bits_id: string | null;
           role: string;
           round1_result: string;
           round2_result: string;
         }[]
       >(
-        `/admin/users/search?q=${encodeURIComponent(q)}${role ? `&role=${role}` : ""}`,
+        `/admin/users/search?q=${encodeURIComponent(q)}${role ? `&role=${encodeURIComponent(role)}` : ""}`,
       ),
     listJudgeStations: (roundId: number) =>
       get<JudgeStationView[]>(`/admin/judge-stations?round_id=${roundId}`),

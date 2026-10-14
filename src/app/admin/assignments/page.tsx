@@ -299,16 +299,46 @@ function DayModal({
     }
   }
 
-  function JudgeReassignControl({ slotId, currentJudgeId, currentLabel, onReassigned }: { slotId: number; currentJudgeId: number; currentLabel: string; onReassigned: () => void }) {
+  function JudgeReassignControl({
+    slotId, currentJudgeId, currentLabel, excludeIds, onReassigned,
+  }: {
+    slotId: number;
+    currentJudgeId: number;
+    currentLabel: string;
+    excludeIds: number[];
+    onReassigned: () => void;
+  }) {
     const [editing, setEditing] = useState(false);
     const [search, setSearch] = useState("");
-    const [results, setResults] = useState<{ id: number; name: string; email: string }[]>([]);
+    const [results, setResults] = useState<{ id: number; name: string; email: string; role: string }[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [busy, setBusy] = useState(false);
 
     useEffect(() => {
-      if (search.length < 2) { setResults([]); return; }
-      const t = setTimeout(() => api.admin.searchUsers(search, "judge").then(setResults), 300);
+      if (!editing || search.length < 2) { setResults([]); return; }
+      const t = setTimeout(() => {
+        api.admin
+          .searchUsers(search, "judge,admin")
+          .then((r) => { setResults(r ?? []); setError(null); })
+          .catch((e) => setError(e.message || "Search failed"));
+      }, 300);
       return () => clearTimeout(t);
-    }, [search]);
+    }, [search, editing]);
+
+    async function pick(newJudgeId: number) {
+      setBusy(true);
+      setError(null);
+      try {
+        await api.admin.reassignSlotJudge(slotId, currentJudgeId, newJudgeId);
+        setEditing(false);
+        setSearch("");
+        onReassigned();
+      } catch (e: any) {
+        setError(e.message || "Reassign failed");
+      } finally {
+        setBusy(false);
+      }
+    }
 
     if (!editing) {
       return (
@@ -318,49 +348,80 @@ function DayModal({
       );
     }
 
+    const excludedIds = new Set(excludeIds.map(Number));
+    const visible = results.filter((r) => !excludedIds.has(Number(r.id)));
+
     return (
       <div style={{ marginTop: 4 }}>
+        <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Replacing {currentLabel}</div>
         <input
-          placeholder="search replacement judge…"
+          autoFocus
+          placeholder="search judges or admins…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ fontSize: 12, padding: "4px 8px", borderRadius: 4, border: "1px solid var(--border)", width: 200 }}
+          style={{ fontSize: 12, padding: "4px 8px", borderRadius: 4, border: "1px solid var(--border)", width: 220 }}
         />
-        {results.map((r) => (
+        {visible.map((r) => (
           <div
             key={r.id}
-            onClick={async () => {
-              await api.admin.reassignSlotJudge(slotId, currentJudgeId, r.id);
-              setEditing(false);
-              onReassigned();
-            }}
-            style={{ fontSize: 12, padding: "4px 6px", cursor: "pointer" }}
+            onClick={() => !busy && pick(r.id)}
+            style={{ fontSize: 12, padding: "4px 6px", cursor: busy ? "default" : "pointer", display: "flex", gap: 6, alignItems: "center" }}
           >
             {r.name || r.email}
+            <Badge tone={r.role === "admin" ? "accent" : "neutral"}>{r.role}</Badge>
           </div>
         ))}
-        <button onClick={() => setEditing(false)} style={{ fontSize: 11, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer" }}>Cancel</button>
+        {search.length >= 2 && visible.length === 0 && (
+          <div style={{ fontSize: 12, color: "var(--text-muted)", padding: "4px 6px" }}>No matching judges or admins.</div>
+        )}
+        {error && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 4 }}>{error}</div>}
+        <button
+          onClick={() => { setEditing(false); setSearch(""); setError(null); }}
+          style={{ fontSize: 11, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", marginTop: 4 }}
+        >
+          Cancel
+        </button>
       </div>
     );
   }
 
   function SlotJudgesPanel({ slotId }: { slotId: number }) {
     const [data, setData] = useState<SlotJudgesResponse | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     async function load() {
-      setData(await api.admin.slotJudges(slotId));
+      try {
+        setData(await api.admin.slotJudges(slotId));
+        setError(null);
+      } catch (e: any) {
+        setError(e.message || "Failed to load judges");
+      }
     }
-    useState(() => { load(); });
+    useEffect(() => { load(); }, [slotId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    if (error) return <p style={{ fontSize: 12, color: "var(--danger)", margin: "8px 0 0" }}>{error}</p>;
     if (!data) return null;
 
+    const excludeIds = [data.host.id, ...data.co_judges.map((j) => j.id)];
+
     return (
-      <div style={{ marginTop: 8, fontSize: 12 }}>
-        <JudgeReassignControl slotId={slotId} currentJudgeId={data.host.id} currentLabel={`host: ${data.host.name}`} onReassigned={load} />
+      <div style={{ marginTop: 8, fontSize: 12, display: "flex", flexDirection: "column", gap: 4 }}>
+        <JudgeReassignControl
+          slotId={slotId}
+          currentJudgeId={data.host.id}
+          currentLabel={`host: ${data.host.name}`}
+          excludeIds={excludeIds}
+          onReassigned={load}
+        />
         {data.co_judges.map((j) => (
-          <div key={j.id} style={{ marginTop: 4 }}>
-            <JudgeReassignControl slotId={slotId} currentJudgeId={j.id} currentLabel={`co-judge: ${j.name}`} onReassigned={load} />
-          </div>
+          <JudgeReassignControl
+            key={j.id}
+            slotId={slotId}
+            currentJudgeId={j.id}
+            currentLabel={`co-judge: ${j.name}`}
+            excludeIds={excludeIds}
+            onReassigned={load}
+          />
         ))}
       </div>
     );
@@ -409,6 +470,7 @@ function DayModal({
                       slotId={slot.id}
                       currentJudgeId={slot.hosted_by_id}
                       currentLabel={`hosted by ${slot.hosted_by_name}`}
+                      excludeIds={[slot.hosted_by_id]}
                       onReassigned={() => setReloadToken((t) => t + 1)}
                     />
                   )}
